@@ -88,4 +88,11 @@ class bloog {
 	}
 }
 
-var_dump(rscandir($_SERVER['DOCUMENT_ROOT'] . '/blogcontent'));
+$content = rscandir($_SERVER['DOCUMENT_ROOT'] . '/blogcontent');
+
+$md = file_get_contents($content[0]);
+
+use \Michelf\MarkdownExtra;
+$html = MarkdownExtra::defaultTransform($md);
+
+var_dump($html);
