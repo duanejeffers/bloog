@@ -87,7 +87,7 @@ abstract class bAbstract {
 		return $this;
 	}
 
-	abstract public function init() {}
+	abstract public function init();
 
 	public function __construct(bConfig $cfg = NULL) {
 		$args = func_get_args();
