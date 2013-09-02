@@ -112,9 +112,9 @@ class bContent extends bAbstract {
 
 			$settings = parse_ini_string(strstr($this->_content, '---', true));
 			foreach ($settings as $key => $value) {
-				$func = 'set' . ucfirst($key);
+				$func = '_' . strtolower($key);
 
-				//$this->$func($value);
+				$this->$func = $value;
 			}
 
 			$this->_content = substr(strstr($this->_content, '---'), 3);
@@ -136,5 +136,5 @@ class bloog {
 }
 
 $content = new bContent($_SERVER['REQUEST_URI']);
-print $content->getContent();
+print $content->_content;
 var_dump($content);
