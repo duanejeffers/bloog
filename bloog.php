@@ -88,4 +88,4 @@ class bloog {
 	}
 }
 
-echo var_export($_SERVER, true);
+var_dump(rscandir($_SERVER['DOCUMENT_ROOT'] . '/blogcontent'));
