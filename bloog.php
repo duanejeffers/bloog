@@ -13,6 +13,8 @@
 define('BLOOG_CFG', '.bloogconfig.php');
 define('PATH', '/');
 
+require_once('vendor/autoload.php');
+
 // functions:
 function rscandir($dir) {
 	$scan = scandir($dir);
@@ -86,4 +88,4 @@ class bloog {
 	}
 }
 
-echo realpath(dirname(__FILE__)) . "\n";
+echo var_export($_SERVER, true);
