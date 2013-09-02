@@ -141,6 +141,26 @@ class bRequest extends bAbstract {
 		$this->_get = $_GET;
 		$this->_post = $_POST;
 	}
+
+	public function get($type, $key = NULL) {
+		if(is_null($key)) { return $this->$type; }
+		if(array_key_exists($key, $this->$type)) {
+			return $this->$type[$key];
+		}
+	}
+
+	public function getServer($key = NULL) {
+		return $this->get('_server', $key);
+	}
+
+	public function getReqVar($key = NULL) {
+		return $this->get('_get', $key);
+	}
+
+	public function getPostVar($key = NULL) {
+		return $this->get('_post', $key);
+	}
+
 }
 
 class bContent extends bAbstract {
@@ -216,7 +236,7 @@ class bRouter {
 	}
 
 	public function render() {
-		$req_uri = $this->req->_server['REQUEST_URI'];
+		$req_uri = $this->req->getServer('REQUEST_URI');
 		logme($this->req, $req_uri);
 	}
 }
