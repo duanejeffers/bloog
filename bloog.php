@@ -34,7 +34,18 @@ function rscandir($dir) {
 
 abstract class bAbstract {
 	public function __get($name) {
+		$name = '_' . strtolower($name);
+		if(in_array($name, array_keys(get_object_vars($this)))) {
+			return $this->$name;
+		}
+	}
 
+	public function __set($name, $value) {
+		$name = '_' . strtolower($name);
+		if(in_array($name, array_keys(get_object_vars($this)))) {
+			$this->$name = $value;
+		}
+		return $this;
 	}
 }
 
@@ -82,13 +93,13 @@ class bRequest {
 
 }
 
-class bContent {
-	protected $_title;
-	protected $_content;
-	protected $_contentMd;
-	protected $_author;
-	protected $_publishDate;
-	protected $_comments;
+class bContent extends bAbstract {
+	protected $_title = NULL;
+	protected $_content = NULL;
+	protected $_contentmd = NULL;
+	protected $_author = NULL;
+	protected $_publishdate = NULL;
+	protected $_comments = TRUE;
 	protected $_page = FALSE; // by default, we need to specify that it isn't a page.
 
 	public function __construct($uri) {
@@ -100,7 +111,11 @@ class bContent {
 			$this->_content = file_get_contents(BLOOG_CONTENT . ($page ? PATH . 'pages': '') . $uri . CONT_EXT);
 
 			$settings = parse_ini_string(strstr($this->_content, '---', true));
-			var_dump($settings);
+			foreach ($settings as $key => $value) {
+				$func = 'set' . ucfirst($key);
+
+				$this->$func($value);
+			}
 
 			$this->_content = substr(strstr($this->_content, '---'), 3);
 		}
