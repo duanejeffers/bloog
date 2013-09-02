@@ -26,16 +26,8 @@ use \Michelf\MarkdownExtra;
 
 function logme() {
 	if(!DEV_LOG) { return; }
-	if(!isset($log_items)) {
-		$log_items = array();
-	}
-
-	if(func_num_args() > 0) {
-		$log_items = array_merge($log_items, func_get_args());
-	} elseif(func_num_args() === 0) {
-		$log = var_export($log_items, true);
-		file_put_contents(DEV_LOG_LOC, $log . "\n", FILE_APPEND);
-	}
+	$log = var_export(func_get_args(), true);
+	file_put_contents(DEV_LOG_LOC, $log . "\n", FILE_APPEND);
 }
 
 function rscandir($dir) {
@@ -145,10 +137,9 @@ class bRequest extends bAbstract {
 	protected $_post;
 
 	public function init() {
-		foreach(array('_server', '_get', '_post') AS $val) {
-			$global = strtoupper($val);
-			$this->$val = $$global;
-		}
+		$this->_server = $_SERVER;
+		$this->_get = $_GET;
+		$this->_post = $_POST;
 	}
 }
 
@@ -281,5 +272,3 @@ $bloog = new bloog(new bConfig(array(
 )));
 
 $bloog->render();
-
-logme();
