@@ -52,7 +52,7 @@ function rscandir($dir, $inc_dir = FALSE) {
 // testing
 $scan = rscandir(($_SERVER['DOCUMENT_ROOT'] . '/blogcontent'));
 $scan_dir = rscandir(($_SERVER['DOCUMENT_ROOT'] . '/blogcontent'), TRUE);
-logme($scan_dir);
+logme($scan, $scan_dir);
 
 function bcache($cache_name, $callback, $ttl = 3600) {
 	if(($data = apc_fetch($cache_name)) === FALSE) {
