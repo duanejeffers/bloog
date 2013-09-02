@@ -30,13 +30,13 @@ function logme() {
 	file_put_contents(DEV_LOG_LOC, $log . "\n", FILE_APPEND);
 }
 
-function rscandir($dir) {
+function rscandir($dir, $inc_dir = FALSE) {
 	$scan = scandir($dir);
 	$result = array();
 	foreach($scan as $val) {
 		if(substr($val, 0, 1) == '.') { continue; }
 		$c_path = $dir . PATH . $val;
-		if(is_file($c_path) || is_dir($c_path)) { 
+		if(is_file($c_path) || (is_dir($c_path) && $inc_dir)) {
 			$result[] = $c_path;
 			if(is_file($c_path)) 
 				continue; 
@@ -50,7 +50,8 @@ function rscandir($dir) {
 }
 
 // testing
-$scan_dir = rscandir(($_SERVER['DOCUMENT_ROOT'] . '/blogcontent'));
+$scan = rscandir(($_SERVER['DOCUMENT_ROOT'] . '/blogcontent'));
+$scan_dir = rscandir(($_SERVER['DOCUMENT_ROOT'] . '/blogcontent'), TRUE);
 logme($scan_dir);
 
 function bcache($cache_name, $callback, $ttl = 3600) {
@@ -176,6 +177,8 @@ class bContent extends bAbstract {
 	protected $_title = NULL;
 	protected $_content = NULL;
 	protected $_contentmd = NULL;
+	protected $_teaser = NULL;
+	protected $_teasermd = NULL;
 	protected $_author = NULL;
 	protected $_publishdate = NULL;
 	protected $_comments = TRUE;
@@ -183,12 +186,13 @@ class bContent extends bAbstract {
 
 	public function init() {
 		$uri = func_get_arg(0);
+		$dir = $this->cfg->get('bloog_content');
 		// Check to see if content is available:
-		if(($blog = is_file(BLOOG_CONTENT . $uri . CONT_EXT)) ||
-		   ($page = is_file(BLOOG_CONTENT . PATH . 'pages' . $uri . CONT_EXT))) {
+		if(($blog = is_file($dir . $uri . CONT_EXT)) ||
+		   ($page = is_file($dir . PATH . 'pages' . $uri . CONT_EXT))) {
 			$this->_page = $page;
 
-			$this->_content = file_get_contents(BLOOG_CONTENT . ($page ? PATH . 'pages': '') . $uri . CONT_EXT);
+			$this->_content = file_get_contents($dir . ($page ? PATH . 'pages': '') . $uri . CONT_EXT);
 
 			$settings = parse_ini_string(strstr($this->_content, '---', true));
 			foreach ($settings as $key => $value) {
@@ -198,12 +202,28 @@ class bContent extends bAbstract {
 			}
 
 			$this->_content = substr(strstr($this->_content, '---'), 3);
+
+			$this->parseTeaser();
 		}
+	}
+
+	public function parseTeaser() {
+		$this->_teaser = strstr($this->_content, '[teaser_break]');
+		$this->_content = str_replace('[teaser_break]', '', $this->_content);
 	}
 
 	public function render() {
 		$this->_contentmd = MarkdownExtra::defaultTransform($this->_content);
 		return $this;
+	}
+
+	public function renderTeaser() {
+		$this->_teasermd = MarkdownExtra::defaultTransform($this->_teaser);
+		return $this;
+	}
+
+	public function isPublished() {
+
 	}
 }
 
@@ -230,11 +250,13 @@ class bController {
 class bRouter {
 	protected $cfg;
 	protected $req;
+	protected $cache;
 	protected $routes = array();
 
 	public function __construct(bConfig $cfg, bRequest $req) {
 		$this->cfg = $cfg;
 		$this->req = $req;
+		$this->cache = $this->cfg->get('enable_cache');
 
 		return $this;
 	}
@@ -242,6 +264,12 @@ class bRouter {
 	public function path($path, $callback) {
 		$this->routes[$path] = $callback;
 		return $this;
+	}
+
+	public function mainRender($req_uri) {
+		if(array_key_exists($req_uri, $this->routes)) {
+
+		}
 	}
 
 	public function render() {
@@ -267,9 +295,11 @@ class bloog {
 	public function render() {
 		$router = new bRouter($this->cfg, new bRequest());
 
-		$router->path('/', function($cfg, $req) {
-
+		$router->path('/update', function($cfg, $req) {
+			// The update functionality is for recreating caches.
 		});
+
+
 	}
 }
 
