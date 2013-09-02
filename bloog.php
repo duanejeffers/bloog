@@ -99,7 +99,7 @@ class bContent {
 
 			$this->_content = file_get_contents(BLOOG_CONTENT . ($page ? PATH . 'pages': '') . $uri . CONT_EXT);
 
-			$settings = parse_ini_str(strstr($this->_content, '---', true));
+			$settings = parse_ini_string(strstr($this->_content, '---', true));
 			var_dump($settings);
 
 			$this->_content = substr(strstr($this->_content, '---'), 3);
