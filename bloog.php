@@ -161,7 +161,8 @@ class bContent extends bAbstract {
 	protected $_comments = TRUE;
 	protected $_page = FALSE; // by default, we need to specify that it isn't a page.
 
-	public function init($uri) {
+	public function init() {
+		$uri = func_get_arg(0);
 		// Check to see if content is available:
 		if(($blog = is_file(BLOOG_CONTENT . $uri . CONT_EXT)) ||
 		   ($page = is_file(BLOOG_CONTENT . PATH . 'pages' . $uri . CONT_EXT))) {
