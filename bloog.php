@@ -23,7 +23,7 @@ function rscandir($dir) {
 		if(substr($val, 0, 1) == '.') { continue; }
 		if(is_file($dir . PATH . $val)) { $result[] = $dir . PATH . $val; continue; }
 		foreach (rscandir($dir . PATH . $val) as $val) {
-			$result[] = $value;
+			$result[] = $val;
 		}
 	}
 
