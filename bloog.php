@@ -12,6 +12,8 @@
 
 define('BLOOG_CFG', '.bloogconfig.php');
 define('PATH', '/');
+define('BLOOG_CONTENT', $_SERVER['DOCUMENT_ROOT'] . '/blogcontent');
+define('CONT_EXT', '.md');
 
 require_once('vendor/autoload.php');
 
@@ -28,6 +30,12 @@ function rscandir($dir) {
 	}
 
 	return $result;
+}
+
+abstract class bAbstract {
+	public function __get($name) {
+
+	}
 }
 
 // config class.
@@ -74,6 +82,30 @@ class bRequest {
 
 }
 
+class bContent {
+	protected $_title;
+	protected $_content;
+	protected $_contentMd;
+	protected $_author;
+	protected $_publishDate;
+	protected $_comments;
+	protected $_page = FALSE; // by default, we need to specify that it isn't a page.
+
+	public function __construct($uri) {
+		// Check to see if content is available:
+		if(($blog = is_file(BLOOG_CONTENT . $uri . CONT_EXT)) ||
+		   ($page = is_file(BLOOG_CONTENT . PATH . 'pages' . $uri . CONT_EXT))) {
+			$this->_page = $page;
+
+			$this->_content = file_get_contents(BLOOG_CONTENT . ($page ? PATH . 'pages': '') . $uri . CONT_EXT);
+
+			$settings = parse_ini_str(strstr($this->_content, '---', true));
+			var_dump($settings);
+
+			$this->_content = substr(strstr($this->_content, '---'), 3);
+		}
+	}
+}
 
 
 class bloog {
@@ -88,11 +120,5 @@ class bloog {
 	}
 }
 
-$content = rscandir($_SERVER['DOCUMENT_ROOT'] . '/blogcontent');
-
-$md = file_get_contents($content[0]);
-
-use \Michelf\MarkdownExtra;
-$html = MarkdownExtra::defaultTransform($md);
-
-var_dump($html);
+$content = new bContent($_SERVER['REQUEST_URI']);
+var_dump($content);
