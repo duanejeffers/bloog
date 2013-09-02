@@ -217,7 +217,7 @@ class bRouter {
 
 	public function render() {
 		$req_uri = $this->req->_server['REQUEST_URI'];
-		logme($req_uri);
+		logme($this->req, $req_uri);
 	}
 }
 
