@@ -41,7 +41,7 @@ function rscandir($dir, $inc_dir = FALSE) {
 			if(is_file($c_path)) 
 				continue; 
 		}
-		foreach (rscandir($dir . PATH . $val) as $val) {
+		foreach (rscandir($c_path, $inc_dir) as $val) {
 			$result[] = $val;
 		}
 	}
