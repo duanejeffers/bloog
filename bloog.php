@@ -143,22 +143,22 @@ class bRequest extends bAbstract {
 	}
 
 	public function get($type, $key = NULL) {
-		if(is_null($key)) { return $this->$type; }
-		if(array_key_exists($key, $this->$type)) {
-			return $this->$type[$key];
+		if(is_null($key)) { return $type; }
+		if(array_key_exists($key, $type)) {
+			return $type[$key];
 		}
 	}
 
 	public function getServer($key = NULL) {
-		return $this->get('_server', $key);
+		return $this->get($this->_server, $key);
 	}
 
 	public function getReqVar($key = NULL) {
-		return $this->get('_get', $key);
+		return $this->get($this->_get, $key);
 	}
 
 	public function getPostVar($key = NULL) {
-		return $this->get('_post', $key);
+		return $this->get($this->_post, $key);
 	}
 
 }
