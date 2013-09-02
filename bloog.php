@@ -267,8 +267,7 @@ $bloog = new bloog(new bConfig(array(
 	'bloog_content' => realpath($_SERVER['DOCUMENT_ROOT'] . '/blogcontent'),
 	'enable_cache' => FALSE,
 	'layout' => $layout,
-	'site_title' => 'bloog v0.1',
-	'site_url' => $_SERVER['']
+	'site_title' => 'bloog v0.1'
 )));
 
 $bloog->render();
