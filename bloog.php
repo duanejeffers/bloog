@@ -6,9 +6,9 @@
 		Uses markdown parsing to display blog posts.
 	**/
 
-if(version_compare(PHP_VERSION, '5.3.0', '>=')) {
+/* if(version_compare(PHP_VERSION, '5.3.0', '>=')) {
 	die('incorrect php version for this script. Must be 5.3 or higher.');
-}
+} */
 
 define('BLOOG_CFG', '.bloogconfig.php');
 define('PATH', '/');
