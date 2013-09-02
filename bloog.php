@@ -35,7 +35,12 @@ function rscandir($dir) {
 	$result = array();
 	foreach($scan as $val) {
 		if(substr($val, 0, 1) == '.') { continue; }
-		if(is_file($dir . PATH . $val)) { $result[] = $dir . PATH . $val; continue; }
+		$c_path = $dir . PATH . $val;
+		if(is_file($c_path) || is_dir($c_path)) { 
+			$result[] = $c_path;
+			if(is_file($c_path)) 
+				continue; 
+		}
 		foreach (rscandir($dir . PATH . $val) as $val) {
 			$result[] = $val;
 		}
@@ -43,6 +48,10 @@ function rscandir($dir) {
 
 	return $result;
 }
+
+// testing
+$scan_dir = rscandir(($_SERVER['DOCUMENT_ROOT'] . '/blogcontent'));
+logme($scan_dir);
 
 function bcache($cache_name, $callback, $ttl = 3600) {
 	if(($data = apc_fetch($cache_name)) === FALSE) {
@@ -131,12 +140,12 @@ class bConfig {
 	}
 }
 
-class bRequest extends bAbstract {
+class bRequest {
 	protected $_server;
 	protected $_get;
 	protected $_post;
 
-	public function init() {
+	public function __construct() {
 		$this->_server = $_SERVER;
 		$this->_get = $_GET;
 		$this->_post = $_POST;
@@ -237,7 +246,9 @@ class bRouter {
 
 	public function render() {
 		$req_uri = $this->req->getServer('REQUEST_URI');
-		logme($this->req, $req_uri);
+		if(array_key_exists($req_uri, $routes)) {
+
+		}
 	}
 }
 
@@ -255,7 +266,6 @@ class bloog {
 
 	public function render() {
 		$router = new bRouter($this->cfg, new bRequest());
-		return $router->render();
 
 		$router->path('/', function($cfg, $req) {
 
