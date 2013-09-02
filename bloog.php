@@ -13,6 +13,21 @@ if(version_compare(PHP_VERSION, '5.3.0', '>=')) {
 define('BLOOP_CFG', '.bloopconfig.php');
 define('PATH', '/');
 
+// functions:
+function rscandir($dir) {
+	$scan = scandir($dir);
+	$result = array();
+	foreach($scan as $val) {
+		if(substr($val, 0, 1) == '.') { continue; }
+		if(is_file($dir . PATH . $val)) { $result[] = $dir . PATH . $val; continue; }
+		foreach (rscandir($dir . PATH . $val) as $val) {
+			$result[] = $value;
+		}
+	}
+
+	return $result;
+}
+
 // config class.
 class bConfig {
 	protected $_configArr = array();
