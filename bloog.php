@@ -12,8 +12,6 @@
 
 define('BLOOG_CFG', '.bloogconfig.php');
 define('PATH', '/');
-define('DOC_PATH', realpath($_SERVER['DOCUMENT_ROOT']));
-define('BLOOG_CONTENT', $_SERVER['DOCUMENT_ROOT'] . '/blogcontent');
 define('CONT_EXT', '.md');
 define('DEV_LOG', TRUE);
 define('DEV_LOG_LOC', '/var/log/bloog.log');
@@ -48,11 +46,6 @@ function rscandir($dir, $inc_dir = FALSE) {
 
 	return $result;
 }
-
-// testing
-$scan = rscandir(($_SERVER['DOCUMENT_ROOT'] . '/blogcontent'));
-$scan_dir = rscandir(($_SERVER['DOCUMENT_ROOT'] . '/blogcontent'), TRUE);
-logme($scan, $scan_dir);
 
 function bcache($cache_name, $callback, $ttl = 3600) {
 	if(($data = apc_fetch($cache_name)) === FALSE) {
@@ -223,7 +216,14 @@ class bContent extends bAbstract {
 	}
 
 	public function isPublished() {
+		if(!is_null($this->_publishdate) && (time() > strtotime($this->_publishdate))) {
+			return TRUE;
+		}
+		return FALSE;
+	}
 
+	public function isPage() {
+		return ($this->_page == TRUE ? TRUE : FALSE);
 	}
 }
 
@@ -233,9 +233,15 @@ class bView {
 
 class bController {
 	protected $view;
+	protected $req;
+	protected $cfg;
 
-	public function __construct() {
+	public function __construct(bConfig $cfg, $req = NULL) {
+		$this->cfg = $cfg;
+		$this->req = $req;
 
+		$this->view = new bView($this->cfg);
+		return $this;
 	}
 
 	public function indexAction() {
@@ -243,6 +249,10 @@ class bController {
 	}
 
 	public function viewAction() {
+
+	}
+
+	public function render() {
 
 	}
 }
@@ -268,15 +278,17 @@ class bRouter {
 
 	public function mainRender($req_uri) {
 		if(array_key_exists($req_uri, $this->routes)) {
-
+			return call_user_func($this->routes[$req_uri], $this->cfg, $this->req);
+		} else {
+			// return 404 error
 		}
 	}
 
 	public function render() {
 		$req_uri = $this->req->getServer('REQUEST_URI');
-		if(array_key_exists($req_uri, $routes)) {
-
-		}
+		// include caching code here.
+		
+		return $this->mainRender($req_uri);
 	}
 }
 
@@ -299,7 +311,13 @@ class bloog {
 			// The update functionality is for recreating caches.
 		});
 
+		$router->path('/', function($cfg, $req) {
+			$controller = new bController($cfg, $req);
+			$controller->indexAction();
+			return $controller->render();
+		});
 
+		return $router->render();
 	}
 }
 
@@ -312,13 +330,44 @@ $layout = <<<BOL
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="%%description%%">
     <meta name="author" content="%%author%%">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
   </head>
   <body>
   	<div class="container">
   	%%content%%
   	</div>
+  	<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
   </body>
 </html>
+BOL;
+
+$post_display = <<<BOL
+
+BOL;
+
+$teaser_display = <<<BOL
+<div class="row">
+	<div class="col-md-12">
+		<h1><a href="%%link%%">%%title%%</a></h1>
+		<hr>
+		%%teaser_content%%
+		<hr>
+		<div class="row">
+			<div class="col-md-6 published"><span class="glyphicon glyphicon-time"></span>Published on %%publish_date%%</div>
+			<div class="col-md-6 pull-right"><a class="btn" href="%%link%%>Read More <span class="glyphicon glyphicon-chevron-right"></span></a></div>
+		</div>
+		<hr>
+	</div>
+</div>
+BOL;
+
+$list_display = <<<BOL
+<div class="row">
+	<div class="col-md-12">
+	%%teasers%%
+
+	</div>
+</div>
 BOL;
 
 $bloog = new bloog(new bConfig(array(
@@ -327,7 +376,9 @@ $bloog = new bloog(new bConfig(array(
 	'bloog_content' => realpath($_SERVER['DOCUMENT_ROOT'] . '/blogcontent'),
 	'enable_cache' => FALSE,
 	'layout' => $layout,
-	'site_title' => 'bloog v0.1'
+	'site_title' => 'bloog v0.1',
+	'post_list_pagecount' => 5,
+	'post_list_order' => 'newest',
 )));
 
 $bloog->render();
