@@ -123,8 +123,8 @@ class bConfig {
 	}
 
 	public function get($key) {
-		if(isset($_configArr[$key])) {
-			return $_configArr[$key];
+		if(isset($this->_configArr[$key])) {
+			return $this->_configArr[$key];
 		}
 		return FALSE;
 	}
@@ -135,7 +135,6 @@ class bConfig {
 
 	public function __construct($cfg) {
 		$this->mergeConfigArr($cfg);
-		logme($cfg, $this->_configArr);
 	}
 }
 
