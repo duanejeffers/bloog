@@ -129,6 +129,10 @@ class bConfig {
 		return FALSE;
 	}
 
+	public function isOpt($key) {
+		return array_key_exists($key, $this->_configArr);
+	}
+
 	public function __construct($cfg) {
 		$this->mergeConfigArr($cfg);
 	}
@@ -175,6 +179,8 @@ class bContent extends bAbstract {
 	protected $_author = NULL;
 	protected $_publishdate = NULL;
 	protected $_comments = TRUE;
+	protected $_breadcrumbs = TRUE;
+	protected $_blog = TRUE;
 	protected $_page = FALSE; // by default, we need to specify that it isn't a page.
 
 	public function init() {
@@ -183,6 +189,7 @@ class bContent extends bAbstract {
 		// Check to see if content is available:
 		if(($blog = is_file($dir . $uri . CONT_EXT)) ||
 		   ($page = is_file($dir . PATH . 'pages' . $uri . CONT_EXT))) {
+		   	$this->_blog = $blog;
 			$this->_page = $page;
 
 			$this->_content = file_get_contents($dir . ($page ? PATH . 'pages': '') . $uri . CONT_EXT);
@@ -225,34 +232,104 @@ class bContent extends bAbstract {
 	public function isPage() {
 		return ($this->_page == TRUE ? TRUE : FALSE);
 	}
+
+	public function isBlog() {
+		return ($this->_blog == TRUE ? TRUE : FALSE);
+	}
 }
 
 class bView {
+	protected $_cfg;
+	protected $_content;
+	protected $_title = array();
 
+	public function __construct($cfg) {
+		$this->_cfg = $cfg;
+	}
+
+	public function setContent($content) {
+		$this->_content = $content;
+		return $this;
+	}
+
+	public function setTitle($title) {
+		$this->_title[] = $title;
+		return $this;
+	}
+
+	public function getTitle() {
+		return implode($this->_title, $this->_cfg->get('title_separator'));
+	}
+
+	public function parse($type, $data = array()) {
+		$template_type = 'template_' . $type;
+		if($this->_cfg->isOpt($template_type)) {
+			return str_replace(array_keys($data), array_values($data), $this->_cfg->get($template_type));
+		}
+		return NULL;
+	}
+
+	public function render() {
+		return $this->parse('layout');
+	}
 }
 
 class bController {
 	protected $view;
 	protected $req;
+	protected $req_uri;
+	protected $req_path;
 	protected $cfg;
 
 	public function __construct(bConfig $cfg, $req = NULL) {
 		$this->cfg = $cfg;
 		$this->req = $req;
+		$this->req_uri = $this->req->getServer('REQUEST_URI');
+		$this->req_path = $this->cfg->get('bloog_content') . $this->req_uri;
 
 		$this->view = new bView($this->cfg);
+
+		if($this->cfg->get('title_sitename_affix') == 'prefix') {
+			$this->view->setTitle($this->cfg->get('title_sitename'));
+		}
+
+		logme($this->req_path, $this->view);
 		return $this;
 	}
 
+	public function defaultAction() {
+		// Now we need to specify if this is a folder or file.
+		if(is_dir($this->req_path)) {
+			$controller->indexAction();
+		} else { // this is not a directory view.
+			$controller->viewAction();
+		}
+	}
+
 	public function indexAction() {
+		// We need to scan the directory of content for the current url.
 
 	}
 
 	public function viewAction() {
+		$req_uri = $this->req->getServer('REQUEST_URI');
+		$content = new bContent($this->cfg, $req_uri);
+		if(!$content->isBlog() && !$content->isPage())
+			return $this->errorAction();
+
+
+	}
+
+	public function errorAction() {
 
 	}
 
 	public function render() {
+		if($this->cfg->get('title_sitename_affix') == 'postfix') {
+			$this->view->setTitle($this->cfg->get('title_sitename'));
+		}
+
+		return $this->view->render();
 
 	}
 }
@@ -260,13 +337,11 @@ class bController {
 class bRouter {
 	protected $cfg;
 	protected $req;
-	protected $cache;
 	protected $routes = array();
 
 	public function __construct(bConfig $cfg, bRequest $req) {
 		$this->cfg = $cfg;
 		$this->req = $req;
-		$this->cache = $this->cfg->get('enable_cache');
 
 		return $this;
 	}
@@ -276,19 +351,16 @@ class bRouter {
 		return $this;
 	}
 
-	public function mainRender($req_uri) {
-		if(array_key_exists($req_uri, $this->routes)) {
-			return call_user_func($this->routes[$req_uri], $this->cfg, $this->req);
-		} else {
-			// return 404 error
-		}
-	}
-
 	public function render() {
 		$req_uri = $this->req->getServer('REQUEST_URI');
-		// include caching code here.
-		
-		return $this->mainRender($req_uri);
+		if(array_key_exists($req_uri, $this->routes)) {
+			return call_user_func($this->routes[$req_uri], $this->cfg, $this->req);
+		} elseif(array_key_exists('*', $this->routes)) {
+			// run the default renderer.
+			return call_user_func($this->routes['*'], $this->cfg, $this->req);
+		} else {
+			// throw an error.
+		}
 	}
 }
 
@@ -317,7 +389,17 @@ class bloog {
 			return $controller->render();
 		});
 
-		return $router->render();
+		$router->path('*', function($cfg, $req) {
+			$controller = new bController($cfg, $req);
+			$controller->defaultAction();
+			return $controller->render();
+		});
+
+		if($this->cfg->get('cache_enable') == TRUE) {
+			$cache_title = $this->cfg->get('cache_prefix') . $req_uri;
+			return bcache($cache_title, array($router, 'render'), $this->cfg->get('cache_ttl'));
+		} else
+			return $router->render();
 	}
 }
 
@@ -365,20 +447,34 @@ $list_display = <<<BOL
 <div class="row">
 	<div class="col-md-12">
 	%%teasers%%
-
 	</div>
 </div>
 BOL;
 
+$error_display = <<<BOL
+
+BOL;
+
 $bloog = new bloog(new bConfig(array(
-	'bloog_install_path' => realpath(dirname(__FILE__)),
-	'bloog_path' => dirname(__FILE__),
-	'bloog_content' => realpath($_SERVER['DOCUMENT_ROOT'] . '/blogcontent'),
-	'enable_cache' => FALSE,
-	'layout' => $layout,
-	'site_title' => 'bloog v0.1',
-	'post_list_pagecount' => 5,
-	'post_list_order' => 'newest',
+	'bloog_install_path'   => realpath(dirname(__FILE__)),
+	'bloog_path' 		   => dirname(__FILE__),
+	'bloog_content' 	   => realpath($_SERVER['DOCUMENT_ROOT'] . '/blogcontent'),
+	'cache_enable' 		   => FALSE,
+	'cache_prefix' 		   => 'bloog',
+	'cache_ttl' 		   => 3600,
+	'template_layout' 	   => $layout,
+	'template_teaser' 	   => $teaser_display,
+	'template_list'   	   => $list_display,
+	'template_post'   	   => $post_display,
+	'template_error'	   => $error_display,
+	'title_sitename'  	   => 'bloog v0.1',
+	'title_sitename_affix' => 'postfix', // options: prefix, postfix
+	'title_separator' 	   => ' :: ',
+	'site_description'     => "Simple Blog using bloog",
+	'site_author' 		   => 'bloog',
+	'post_list_pagecount'  => 5,
+	'post_list_order' 	   => 'newest',
+	'post_breadcrumbs'     => TRUE,
 )));
 
-$bloog->render();
+echo $bloog->render();
