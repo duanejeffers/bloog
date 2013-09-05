@@ -373,7 +373,8 @@ class bloog {
 			$cfg->mergeConfigFile($rootcfg);
 		}
 		$this->cfg = $cfg;
-		logme($cfg);
+		$content_path = $cfg->get('bloog_content');
+		logme($cfg, $content_path);
 	}
 
 	public function render() {
