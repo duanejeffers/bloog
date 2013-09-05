@@ -135,6 +135,7 @@ class bConfig {
 
 	public function __construct($cfg) {
 		$this->mergeConfigArr($cfg);
+		logme($cfg, $this->_configArr);
 	}
 }
 
@@ -293,16 +294,16 @@ class bController {
 			$this->view->setTitle($this->cfg->get('title_sitename'));
 		}
 
-		logme($this->cfg->get('bloog_content'), $this->req_path, $this->view);
+		logme($this->cfg->get('bloog_content'), $this->req_path);
 		return $this;
 	}
 
 	public function defaultAction() {
 		// Now we need to specify if this is a folder or file.
 		if(is_dir($this->req_path)) {
-			$controller->indexAction();
+			$this->indexAction();
 		} else { // this is not a directory view.
-			$controller->viewAction();
+			$this->viewAction();
 		}
 	}
 
