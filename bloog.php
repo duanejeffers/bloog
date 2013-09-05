@@ -293,7 +293,7 @@ class bController {
 			$this->view->setTitle($this->cfg->get('title_sitename'));
 		}
 
-		logme($this->req_path, $this->view);
+		logme($this->cfg->get('bloog_content'), $this->req_path, $this->view);
 		return $this;
 	}
 
