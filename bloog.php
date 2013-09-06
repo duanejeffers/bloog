@@ -456,7 +456,8 @@ class bController {
 
 	public function viewAction() {
 		logme($this->req_path);
-		$content = new bContent($this->cfg, $this->req_uri);
+		$content = new bContent($this->cfg, $this->req_path);
+		logme($content);
 		if(!$content->isContent())
 			return $this->errorAction();
 
