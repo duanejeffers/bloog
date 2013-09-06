@@ -437,7 +437,7 @@ class bControllerSimple extends bAbstract {
 		$this->view = new bView($this->cfg);
 
 		if($this->cfg->get('title_sitename_affix') == 'prefix') {
-			$this->view->getHelper()->setTitle($this->cfg->get('title_sitename'));
+			$this->view->getHelper()->addTitle($this->cfg->get('title_sitename'));
 		}
 		return $this;
 	}
@@ -575,14 +575,14 @@ class bController extends bControllerSimple {
 	}
 
 	public function errorAction() {
-		$this->view->getHelper()->setTitle($this->cfg->get('title_error'));
+		$this->view->getHelper()->addTitle($this->cfg->get('title_error'));
 
 		$this->view->setContent('error');
 	}
 
 	public function render() {
 		if($this->cfg->get('title_sitename_affix') == 'postfix') {
-			$this->view->getHelper()->setTitle($this->cfg->get('title_sitename'));
+			$this->view->getHelper()->addTitle($this->cfg->get('title_sitename'));
 		}
 
 		return $this->view->render();
