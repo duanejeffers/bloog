@@ -383,12 +383,12 @@ class bController {
 
 		foreach ($content_list as $content_file) {
 			$content = new bContent($this->cfg, $content_file);
-			//logme($content);
 			if(!$content->isListed() ||
 			   !$content->isPublished()) { 
 				unset($content); 
 				continue; 
 			}
+			logme($content);
 			$time = $content->getTimestamp();
 			$list[$time] = $content;
 			unset($content);
@@ -447,6 +447,7 @@ class bController {
 	}
 
 	public function viewAction() {
+		logme($this->req_path);
 		$content = new bContent($this->cfg, $this->req_uri);
 		if(!$content->isContent())
 			return $this->errorAction();
