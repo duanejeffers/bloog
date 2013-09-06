@@ -223,10 +223,11 @@ class bContent extends bAbstract {
 				if(strpos($line, '---') !== FALSE) { 
 					break;
 				}
-				$setting = sscanf($line, "#%[^$]s:%[^$]s");
-				logme($line, $setting);
-				$setting = array_map('trim', $setting);
-				call_user_func_array(array($this, 'set'), $setting);
+				$break = strpos($line, ':');
+				$key = substr($line, 1, $break);
+				$setting = substr($line, $break);
+				logme($line, $key, $setting);
+				call_user_func(array($this, 'set'), trim($key), trim($setting));
 			}
 			$this->_fp = $fp;
 			$this->fmtPublishDate();
