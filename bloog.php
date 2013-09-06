@@ -231,7 +231,7 @@ class bContent extends bAbstract {
 			$this->_fp = $fp;
 			$this->fmtPublishDate();
 			if(!$addext) {
-				$this->_content_path = str_replace(array(strtoupper(CONT_EXT), strtolower(CONT_EXT)), '', $this->content_path);
+				$this->_content_path = str_replace(array(strtoupper(CONT_EXT), strtolower(CONT_EXT)), '', $this->_content_path);
 			} else {
 				$this->_isfile = $addext;
 			}
