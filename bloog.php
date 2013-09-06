@@ -213,7 +213,6 @@ class bContent extends bAbstract {
 
 	public function init() {
 		$this->_content_path = func_get_arg(0);
-		logme($this->_content_path);
 		// Check to see if content is available:
 		$this->_isfile = is_file($this->_content_path);
 		if(($addext = is_file($this->_content_path . CONT_EXT)) ||
@@ -221,11 +220,11 @@ class bContent extends bAbstract {
 			$fp = fopen($this->_content_path . ($addext ? CONT_EXT : ''), 'r');
 			
 			while($line = fgets($fp)) {
-				logme($line);
 				if(strpos($line, '---') !== FALSE) { 
 					break;
 				}
 				$setting = sscanf($line, "#%s:%s");
+				logme($line, $setting);
 				$setting = array_map('trim', $setting);
 				call_user_func_array(array($this, 'set'), $setting);
 			}
