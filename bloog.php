@@ -50,6 +50,13 @@ function rscandir($dir, $inc_dir = FALSE) {
 	return $result;
 }
 
+function path_check($path) {
+	if(($realpath = realpath($path)) !== FALSE) {
+		return $realpath;
+	}
+	return $path;
+}
+
 function bcache($cache_name, $callback, $ttl = 3600) {
 	if(($data = apc_fetch($cache_name)) === FALSE) {
 		$data = call_user_func($callback);
@@ -358,7 +365,7 @@ class bController {
 		elseif($req instanceof bRequest)
 			$this->req_uri = $this->req->getServer('REQUEST_URI');
 
-		$this->req_path = realpath($this->cfg->get('bloog_content') . $this->req_uri);
+		$this->req_path = path_check($this->cfg->get('bloog_content') . $this->req_uri);
 
 		$this->view = new bView($this->cfg);
 
