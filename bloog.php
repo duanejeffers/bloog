@@ -413,8 +413,8 @@ class bController {
 			$page_list[] = $this->view->parse('teaser', array(
 				'%%link%%'  	     => sprintf(ANCHOR,
 												$content->getUrl(),
-												$cfg->get('teaser_link_class'),
-												$cfg->get('teaser_link_text')),
+												$this->cfg->get('teaser_link_class'),
+												$this->cfg->get('teaser_link_text')),
 				'%%title%%' 	     => $content->get('title'),
 				'%%author%%'		 => $content->get('author'),
 				'%%publish_date%%'   => $content->getPublishDate(),
@@ -426,14 +426,14 @@ class bController {
 
 		$next_link = sprintf(ANCHOR,
 							 $this->req_uri . '?page=' . $current_page++,
-							 $cfg->get('pager_next_class'),
-							 $cfg->get('pager_next_text'));
+							 $this->cfg->get('pager_next_class'),
+							 $this->cfg->get('pager_next_text'));
 
 		if($current_page < 1) {
 			$prev_link = sprintf(ANCHOR,
 								 $this->req_uri . '?page=' . $current_page--,
-								 $cfg->get('pager_prev_class'),
-								 $cfg->get('pager_prev_text'));
+								 $this->cfg->get('pager_prev_class'),
+								 $this->cfg->get('pager_prev_text'));
 		} else
 			$prev_link = NULL;
 
