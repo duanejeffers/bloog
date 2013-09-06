@@ -594,7 +594,7 @@ $teaser_display = <<<BOL
 		%%teaser_content%%
 		<hr>
 		<div class="row">
-			<div class="col-md-10 published"><span class="glyphicon glyphicon-time"></span>Published on %%publish_date%%</div>
+			<div class="col-md-10 published"><span class="glyphicon glyphicon-time"></span> <small>Posted on %%publish_date%%</small></div>
 			<div class="col-md-2 readmore pull-right">%%link%%</div>
 		</div>
 		<hr>
