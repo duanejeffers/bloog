@@ -26,7 +26,7 @@ use \Michelf\MarkdownExtra;
 function logme() {
 	if(!DEV_LOG) { return; }
 	$log = var_export(func_get_args(), true);
-	file_put_contents(DEV_LOG_LOC, $log . "\n", FILE_APPEND);
+	file_put_contents(DEV_LOG_LOC, 'line: ' . __LINE__ . ' ' .$log . "\n", FILE_APPEND);
 }
 
 function rscandir($dir, $inc_dir = FALSE) {
