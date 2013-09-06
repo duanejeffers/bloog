@@ -320,8 +320,7 @@ class bController {
 	}
 
 	public function viewAction() {
-		$req_uri = $this->req->getServer('REQUEST_URI');
-		$content = new bContent($this->cfg, $req_uri);
+		$content = new bContent($this->cfg, $this->req_uri);
 		if(!$content->isBlog() && !$content->isPage())
 			return $this->errorAction();
 
@@ -331,7 +330,11 @@ class bController {
 	}
 
 	public function errorAction() {
+		$content = $this->view->parse('error');
 
+		$this->view->setTitle($this->cfg->get('title_error'));
+
+		$this->view->setContent($content);
 	}
 
 	public function render() {
@@ -490,6 +493,7 @@ $bloog = new bloog(new bConfig(array(
 	'title_sitename'  	   => 'bloog v0.1',
 	'title_sitename_affix' => 'postfix', // options: prefix, postfix
 	'title_separator' 	   => ' :: ',
+	'title_error'		   => 'Whoops!',
 	'site_description'     => "Simple Blog using bloog",
 	'site_author' 		   => 'bloog',
 	'post_list_pagecount'  => 5,
