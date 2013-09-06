@@ -445,8 +445,6 @@ class bController extends bAbstract {
 	public function indexAction() {
 		// We need to scan the directory of content for the current url.
 		$content_list = rscandir($this->req_path);
-		logme($content_list);
-
 		$list = array();
 
 		foreach ($content_list as $content_file) {
@@ -520,7 +518,7 @@ class bController extends bAbstract {
 
 	public function viewAction() {
 		$content = new bContent($this->cfg, $this->req_path);
-		if(!$content->isContent() || !$this->isPublished())
+		if(!$content->isContent() || !$content->isPublished())
 			return $this->errorAction();
 
 		// This is a content action.
