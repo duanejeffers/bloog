@@ -306,7 +306,9 @@ class bViewHelper extends bAbstract {
 	protected $_script;
 
 	protected function init() {
-
+		$this->_link = $this->cfg->get('view_link');
+		$this->_style = $this->cfg->get('view_style');
+		$this->_script = $this->cfg->get('view_script');
 	}
 
 	public function setTitle($title) {
@@ -315,6 +317,23 @@ class bViewHelper extends bAbstract {
 
 	public function getTitle() {
 		return implode($this->_title, $this->cfg->get('title_separator'));
+	}
+
+	public function renderer($type, $format) {
+		$return = array();
+		foreach ($type as $value) {
+			$return[] = sprintf($format, $value);
+		}
+
+		return implode($return);
+	}
+
+	public function renderLink() {
+		return $this->renderer($this->_link, '<link rel="stylesheet" href="%s">%s');
+	}
+
+	public function renderStyle() {
+		return $this->renderer($this->_style, "<style type=\"text/css\">\n %s \n</style>");
 	}
 }
 
