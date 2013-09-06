@@ -292,6 +292,8 @@ class bView {
 	protected $_cfg;
 	protected $_content;
 	protected $_title = array();
+	protected $_js = array();
+	protected $_css = array();
 
 	public function __construct($cfg) {
 		$this->_cfg = $cfg;
@@ -320,7 +322,8 @@ class bView {
 					return call_user_func_array($template, array($data, $this));
 					break;
 				case 'string':
-					return str_replace(array_keys($data), array_values($data), $this->_cfg->get($template_type));
+					$keys = array_map(function($val) { return '%%' . $val . '%%'; }, array_keys($data));
+					return str_replace($keys, array_values($data), $this->_cfg->get($template_type));
 					break;
 			}
 		}
@@ -329,10 +332,10 @@ class bView {
 
 	public function render() {
 		$data = array(
-			'%%title%%'       => $this->getTitle(),
-			'%%description%%' => $this->_cfg->get('site_description'),
-			'%%author%%'	  => $this->_cfg->get('site_author'),
-			'%%content%%'	  => $this->_content,
+			'title'       => $this->getTitle(),
+			'description' => $this->_cfg->get('site_description'),
+			'author'	  => $this->_cfg->get('site_author'),
+			'content'	  => $this->_content,
 
 		);
 		return $this->parse('layout', $data);
@@ -414,15 +417,15 @@ class bController {
 		$page_list = array();
 		foreach ($list as $key => $content) {
 			$page_list[] = $this->view->parse('teaser', array(
-				'%%link%%'  	     => sprintf(ANCHOR,
+				'link'  	     => sprintf(ANCHOR,
 												$content->getUrl(),
 												$this->cfg->get('teaser_link_class'),
 												$this->cfg->get('teaser_link_text')),
-				'%%title%%' 	     => $content->get('title'),
-				'%%author%%'		 => $content->get('author'),
-				'%%publish_date%%'   => $content->getPublishDate(),
-				'%%teaser_content%%' => $content->render(TRUE),
-				'%%url%%'			 => $content->getUrl(),
+				'title' 	     => $content->get('title'),
+				'author'		 => $content->get('author'),
+				'publish_date'   => $content->getPublishDate(),
+				'teaser_content' => $content->render(TRUE),
+				'url'			 => $content->getUrl(),
 			));
 		}
 		unset($list); //no longer need the list.
@@ -444,9 +447,9 @@ class bController {
 			$prev_link = NULL;
 
 		$this->view->setContent('list', array(
-			'%%teaser_list%%' => implode($page_list),
-			'%%prev_link%%'   => $prev_link,
-			'%%next_link%%'	  => $next_link,
+			'teaser_list' => implode($page_list),
+			'prev_link'   => $prev_link,
+			'next_link'	  => $next_link,
 		));
 	}
 
@@ -458,15 +461,15 @@ class bController {
 		// This is a content action.
 
 		$this->view->setContent('post', array(
-			'%%link%%'  	     => sprintf(ANCHOR,
+			'link'  	     => sprintf(ANCHOR,
 											$content->getUrl(),
 											$this->cfg->get('teaser_link_class'),
 											$this->cfg->get('teaser_link_text')),
-			'%%title%%' 	     => $content->get('title'),
-			'%%author%%'		 => $content->get('author'),
-			'%%publish_date%%'   => $content->getPublishDate(),
-			'%%post_content%%'   => $content->render(),
-			'%%url%%'			 => $content->getUrl(),
+			'title' 	     => $content->get('title'),
+			'author'		 => $content->get('author'),
+			'publish_date'   => $content->getPublishDate(),
+			'post_content'   => $content->render(),
+			'url'			 => $content->getUrl(),
 		));
 
 	}
@@ -522,10 +525,11 @@ class bloog {
 
 	public function __construct(bConfig $cfg) {
 		$rootcfg = $cfg->get('bloog_path') . PATH . BLOOG_CFG;
-		logme($rootcfg);
+		logme($cfg);
 		if(is_file($rootcfg)) {
 			$cfg->mergeConfigFile($rootcfg);
 		}
+		logme($cfg);
 		$this->cfg = $cfg;
 	}
 
@@ -669,6 +673,10 @@ $bloog = new bloog(new bConfig(array(
 	'pager_next_class'	   => '',
 	'pager_prev_text'	   => '<span class="glyphicon glyphicon-chevron-left"></span> Newer',
 	'pager_prev_class'	   => '',
+	'view_js'			   => array(array('src' => '//code.jquery.com/jquery.js'),
+									array('src' => '//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js')),
+	'view_link'			   => array('//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css'),
+	'view_style'		   => array(),
 )));
 
 echo $bloog->render();
