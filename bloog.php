@@ -377,12 +377,13 @@ class bController {
 	public function indexAction() {
 		// We need to scan the directory of content for the current url.
 		$content_list = rscandir($this->req_path);
+		logme($content_list);
 
 		$list = array();
 
 		foreach ($content_list as $content_file) {
 			$content = new bContent($this->cfg, $content_file);
-			logme($content);
+			//logme($content);
 			if(!$content->isListed() ||
 			   !$content->isPublished()) { 
 				unset($content); 
