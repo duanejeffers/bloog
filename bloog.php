@@ -577,13 +577,26 @@ $layout = <<<BOL
   	<div class="container">
   	%%content%%
   	</div>
+  	<script src="//code.jquery.com/jquery.js"></script>
   	<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
   </body>
 </html>
 BOL;
 
 $post_display = <<<BOL
-
+<div class="row">
+	<div class="col-md-12">
+		<h1>%%title%%</h1>
+		<p class="lead">%%author%%</p>
+		<hr>
+		%%post_content%%
+		<hr>
+		<div class="row">
+			<div class="col-md-12 published"><p><span class="glyphicon glyphicon-time"></span> Posted on %%publish_date%%</p></div>
+		</div>
+		<hr>
+	</div>
+</div>
 BOL;
 
 $teaser_display = <<<BOL
