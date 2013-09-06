@@ -97,7 +97,6 @@ abstract class bAbstract {
 	}
 
 	public function strBool($opt) {
-		logme($opt);
 		if(strtoupper($opt) === 'TRUE' || $opt == TRUE) {
 			return TRUE;
 		}
@@ -387,7 +386,7 @@ class bController {
 
 		foreach ($content_list as $content_file) {
 			$content = new bContent($this->cfg, $content_file);
-			logme($content);
+			logme($content, $content->isListed(), $content->isPublished());
 			if(!$content->isListed() ||
 			   !$content->isPublished()) { 
 				unset($content); 
