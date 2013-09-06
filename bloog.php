@@ -74,6 +74,19 @@ function bcache_invalid() {
 	}
 }
 
+abstract class bAbstract {
+	protected $cfg;
+
+	public function __construct() {
+		$args = func_get_args();
+		$this->cfg = array_shift();
+
+		return call_user_func_array(array($this, 'init'), $args);
+	}
+
+	abstract protected function init();
+}
+
 // config class.
 class bConfig {
 	protected $_configArr = array();
@@ -151,9 +164,8 @@ class bRequest {
 
 }
 
-class bContent {
+class bContent extends bAbstract {
 	private $_fp = NULL;
-	protected $cfg;
 	protected $_content_path = NULL;
 	protected $_title = NULL;
 	protected $_author = NULL;
@@ -189,9 +201,8 @@ class bContent {
 		return FALSE;
 	}
 
-	public function __construct(bConfig $cfg = NULL, $path) {
-		$this->cfg = $cfg;
-		$this->_content_path = $path;
+	protected function init() {
+		$this->_content_path = func_get_arg(0);
 		// Check to see if content is available:
 		$this->_isfile = is_file($this->_content_path);
 		if(($addext = is_file($this->_content_path . CONT_EXT)) ||
@@ -288,15 +299,27 @@ class bContent {
 	}
 }
 
-class bView {
-	protected $_cfg;
-	protected $_content;
+class bViewHelper extends bAbstract {
 	protected $_title = array();
-	protected $_js = array();
-	protected $_css = array();
+	protected $_link;
+	protected $_style;
+	protected $_script;
 
-	public function __construct($cfg) {
-		$this->_cfg = $cfg;
+	public function setTitle($title) {
+		$this->_title[] = $title;
+	}
+
+	public function getTitle() {
+		return implode($this->_title, $this->cfg->get('title_separator'));
+	}
+}
+
+class bView extends bAbstract {
+	protected $_content;
+	protected $_viewhelper;
+
+	protected function init() {
+		$this->_viewhelper = new bViewHelper($this->cfg);
 	}
 
 	public function setContent($parser, $content_arr = array()) {
@@ -304,26 +327,17 @@ class bView {
 		return $this;
 	}
 
-	public function setTitle($title) {
-		$this->_title[] = $title;
-		return $this;
-	}
-
-	public function getTitle() {
-		return implode($this->_title, $this->_cfg->get('title_separator'));
-	}
-
 	public function parse($type, $data = array()) {
 		$template_type = 'template_' . $type;
-		if($this->_cfg->isOpt($template_type)) {
-			$template = $this->_cfg->get($template_type);
+		if($this->cfg->isOpt($template_type)) {
+			$template = $this->cfg->get($template_type);
 			switch(gettype($template)) {
 				case 'object':
-					return call_user_func_array($template, array($data, self));
+					return call_user_func_array($template, array($data, $this));
 					break;
 				case 'string':
 					$keys = array_map(function($val) { return '%%' . $val . '%%'; }, array_keys($data));
-					return str_replace($keys, array_values($data), $this->_cfg->get($template_type));
+					return str_replace($keys, array_values($data), $this->cfg->get($template_type));
 					break;
 			}
 		}
@@ -332,26 +346,28 @@ class bView {
 
 	public function render() {
 		$data = array(
-			'title'       => $this->getTitle(),
-			'description' => $this->_cfg->get('site_description'),
-			'author'	  => $this->_cfg->get('site_author'),
+			'title'       => $this->getHelper()->getTitle(),
+			'description' => $this->cfg->get('site_description'),
+			'author'	  => $this->cfg->get('site_author'),
 			'content'	  => $this->_content,
 
 		);
 		return $this->parse('layout', $data);
 	}
+
+	public function getHelper() {
+		return $this->_viewhelper;
+	}
 }
 
-class bController {
+class bController extends bAbstract {
 	protected $view;
 	protected $req;
 	protected $req_uri;
 	protected $req_path;
-	protected $cfg;
 
-	public function __construct(bConfig $cfg, $req = NULL) {
-		$this->cfg = $cfg;
-		$this->req = $req;
+	protected function init() {
+		$this->req = func_get_arg(0);
 		if(is_string($req))
 			$this->req_uri = $req;
 		elseif($req instanceof bRequest)
@@ -362,7 +378,7 @@ class bController {
 		$this->view = new bView($this->cfg);
 
 		if($this->cfg->get('title_sitename_affix') == 'prefix') {
-			$this->view->setTitle($this->cfg->get('title_sitename'));
+			$this->view->getHelper()->setTitle($this->cfg->get('title_sitename'));
 		}
 		return $this;
 	}
@@ -475,14 +491,14 @@ class bController {
 	}
 
 	public function errorAction() {
-		$this->view->setTitle($this->cfg->get('title_error'));
+		$this->view->getHelper()->setTitle($this->cfg->get('title_error'));
 
 		$this->view->setContent('error');
 	}
 
 	public function render() {
 		if($this->cfg->get('title_sitename_affix') == 'postfix') {
-			$this->view->setTitle($this->cfg->get('title_sitename'));
+			$this->view->getHelper()->setTitle($this->cfg->get('title_sitename'));
 		}
 
 		return $this->view->render();
@@ -490,14 +506,12 @@ class bController {
 	}
 }
 
-class bRouter {
-	protected $cfg;
+class bRouter extends bAbstract {
 	protected $req;
 	protected $routes = array();
 
-	public function __construct(bConfig $cfg, bRequest $req) {
-		$this->cfg = $cfg;
-		$this->req = $req;
+	public function init() {
+		$this->req = func_get_arg(0);
 
 		return $this;
 	}
@@ -520,17 +534,12 @@ class bRouter {
 	}
 }
 
-class bloog {
-	protected $cfg;
-
-	public function __construct(bConfig $cfg) {
-		$rootcfg = $cfg->get('bloog_path') . PATH . BLOOG_CFG;
-		logme($cfg);
+class bloog extends bAbstract {
+	protected function init() {
+		$rootcfg = $this->cfg->get('bloog_path') . PATH . BLOOG_CFG;
 		if(is_file($rootcfg)) {
-			$cfg->mergeConfigFile($rootcfg);
+			$this->cfg->mergeConfigFile($rootcfg);
 		}
-		logme($cfg);
-		$this->cfg = $cfg;
 	}
 
 	public function render() {
