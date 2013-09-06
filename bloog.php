@@ -305,6 +305,10 @@ class bViewHelper extends bAbstract {
 	protected $_style;
 	protected $_script;
 
+	protected function init() {
+		
+	}
+
 	public function setTitle($title) {
 		$this->_title[] = $title;
 	}
