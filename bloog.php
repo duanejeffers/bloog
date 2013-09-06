@@ -476,7 +476,7 @@ class bController {
 			'%%title%%' 	     => $content->get('title'),
 			'%%author%%'		 => $content->get('author'),
 			'%%publish_date%%'   => $content->getPublishDate(),
-			'%%tpost_content%%' => $content->render(TRUE),
+			'%%post_content%%'   => $content->render(),
 			'%%url%%'			 => $content->getUrl(),
 		));
 
