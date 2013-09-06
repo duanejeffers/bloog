@@ -319,7 +319,7 @@ class bViewHelper extends bAbstract {
 		$this->_script = $this->cfg->get('view_script');
 	}
 
-	public function setTitle($title) {
+	public function addTitle($title) {
 		$this->_title[] = $title;
 	}
 
@@ -649,8 +649,9 @@ class bloog extends bAbstract {
 
 		$router->path('/rss', function($cfg, $req) {
 			$controller = new bController($cfg, '/'); // Force use of root.
-			$controller->rssAction();
-			return $controller->render();
+
+
+			return $return;
 		});
 
 		$router->path('*', function($cfg, $req) {
