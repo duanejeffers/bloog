@@ -390,8 +390,13 @@ class bloog {
 	public function render() {
 		$router = new bRouter($this->cfg, new bRequest());
 
-		$router->path('/update', function($cfg, $req) {
+		$router->path('/bloogcacheupdate', function($cfg, $req) {
 			// The update functionality is for recreating caches.
+			if($cfg->get('cache_enable') == FALSE) {
+				$controller = new bController($cfg, $req);
+				$controller->errorAction();
+				return $controller->render();
+			}
 		});
 
 		$router->path('/', function($cfg, $req) {
