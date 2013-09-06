@@ -606,7 +606,6 @@ $list_display = <<<BOL
 <div class="row">
 	<div class="col-md-10 col-md-offset-1">
 	%%teaser_list%%
-	<hr>
 	<ul class="pager">
 		<li class="previous">%%prev_link%%</li>
 		<li class="next">%%next_link%%</li>
