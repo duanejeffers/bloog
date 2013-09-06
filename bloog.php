@@ -342,11 +342,11 @@ class bViewHelper extends bAbstract {
 		foreach ($type as $value) {
 			$return[] = sprintf($format, $value);
 		}
-		return implode($return);
+		return implode("\n", $return);
 	}
 
 	public function renderLink() {
-		return $this->renderer($this->_link, '<link rel="stylesheet" href="%s">' . "\n");
+		return $this->renderer($this->_link, '<link rel="stylesheet" href="%s">');
 	}
 
 	public function renderStyle() {
@@ -360,7 +360,7 @@ class bViewHelper extends bAbstract {
 							  (isset($script['src']) ? ' src="' . $script['src'] . '"' : NULL),
 							  (isset($script['code']) ? $script['code'] : NULL));
 		}
-		return implode($return);
+		return implode("\n", $return);
 	}
 }
 
