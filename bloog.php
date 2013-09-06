@@ -319,7 +319,7 @@ class bView {
 			$template = $this->_cfg->get($template_type);
 			switch(gettype($template)) {
 				case 'object':
-					return call_user_func_array($template, array($data, $this));
+					return call_user_func_array($template, array($data, self));
 					break;
 				case 'string':
 					$keys = array_map(function($val) { return '%%' . $val . '%%'; }, array_keys($data));
