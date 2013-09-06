@@ -223,7 +223,7 @@ class bContent extends bAbstract {
 				if(strpos($line, '---') !== FALSE) { 
 					break;
 				}
-				$setting = sscanf($line, "#%s\:%s");
+				$setting = sscanf($line, "#%s: %s");
 				logme($line, $setting);
 				$setting = array_map('trim', $setting);
 				call_user_func_array(array($this, 'set'), $setting);
