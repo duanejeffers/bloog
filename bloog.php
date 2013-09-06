@@ -224,7 +224,7 @@ class bContent extends bAbstract {
 					break;
 				}
 				$line = trim(trim($line), '#');
-				list($key, $setting) = explode(':', $line, 1);
+				list($key, $setting) = explode(':', $line, 2);
 				logme($line, $key, $setting);
 				call_user_func(array($this, 'set'), trim($key), trim($setting));
 			}
