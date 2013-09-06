@@ -424,7 +424,6 @@ class bController extends bAbstract {
 
 		foreach ($content_list as $content_file) {
 			$content = new bContent($this->cfg, $content_file);
-			logme($content, $content->isListed(), $content->isPublished());
 			if(!$content->isListed() ||
 			   !$content->isPublished()) { 
 				unset($content); 
@@ -560,6 +559,7 @@ class bRouter extends bAbstract {
 class bloog extends bAbstract {
 	protected function init() {
 		$rootcfg = $this->cfg->get('bloog_path') . PATH . BLOOG_CFG;
+		logme($rootcfg);
 		if(is_file($rootcfg)) {
 			$this->cfg->mergeConfigFile($rootcfg);
 		}
