@@ -355,7 +355,7 @@ class bController {
 		elseif($req instanceof bRequest)
 			$this->req_uri = $this->req->getServer('REQUEST_URI');
 
-		$this->req_path = $this->cfg->get('bloog_content') . $this->req_uri;
+		$this->req_path = realpath($this->cfg->get('bloog_content') . $this->req_uri);
 
 		$this->view = new bView($this->cfg);
 
