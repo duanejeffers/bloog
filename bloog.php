@@ -161,6 +161,7 @@ class bRequest {
 		if(array_key_exists($key, $type)) {
 			return $type[$key];
 		}
+		return FALSE;
 	}
 
 	public function getServer($key = NULL) {
@@ -181,57 +182,70 @@ class bContent extends bAbstract {
 	private $_fp = NULL;
 	protected $_content_path = NULL;
 	protected $_title = NULL;
-	protected $_content = NULL;
-	protected $_contentmd = NULL;
-	protected $_teaser = NULL;
-	protected $_teasermd = NULL;
 	protected $_author = NULL;
 	protected $_publishdate = NULL;
+	protected $_publishtimestamp = NULL;
 	protected $_published = NULL;
 	protected $_comments = TRUE;
 	protected $_breadcrumbs = TRUE;
+	protected $_listed = FALSE; // If true, content will show in list view.
 	protected $_isfile = FALSE;
 
 	private function renderMdStr($string) {
 		return MarkdownExtra::defaultTransform($string);
 	}
 
+	private function fmtPublishDate() {
+		if(!is_null($this->_publishdate)) {
+			$time = strtotime($this->_publishdate);
+		} elseif(!is_null($this->_publishtimestamp)) {
+			$time = $this->_publishtimestamp;
+		} else {
+			$time = filectime($this->_content_path);
+		}
+
+		$this->_publishdate = date($this->cfg->get('date_format'), $time);
+		$this->_publishtimestamp = $time;
+	}
+
 	public function init() {
-		$this->content_path = func_get_arg(0) . CONT_EXT;
+		$this->content_path = func_get_arg(0);
 		// Check to see if content is available:
 		$this->_isfile = is_file($this->content_path);
-		if($this->isContent()) {
-			$fp = fopen($this->content_path, 'r');
-			$opts_parse = TRUE;
-			do {
-				$line = fgets($fp);
+		if(($addext = is_file($this->content_path . CONT_EXT)) ||
+			$this->isContent()) {
+			$fp = fopen($this->content_path . ($addext ? CONT_EXT : ''), 'r');
+			
+			while($line = fgets($fp)) {
 				if(strpos($line, '---') !== FALSE) { 
-					$opts_parse = FALSE; 
-				} else {
-					$setting = sscanf($line, "#%s:%s");
-					$setting = array_map('trim', $setting);
-					call_user_func_array(array($this, 'set'), $setting);
+					break;
 				}
-			} while($opts_parse);
+				$setting = sscanf($line, "#%s:%s");
+				$setting = array_map('trim', $setting);
+				call_user_func_array(array($this, 'set'), $setting);
+			}
 			$this->_fp = $fp;
+			$this->fmtPublishDate();
+			if(!$addext) {
+				$this->content_path = str_replace(array(strtoupper(CONT_EXT), strtolower(CONT_EXT)), '', $this->content_path);
+			} else {
+				$this->_isfile = $addext;
+			}
 		} else {
 			return FALSE;
 		}
 	}
 
-	public function parseTeaser() {
-		$this->_teaser = strstr($this->_content, '[teaser_break]');
-		$this->_content = str_replace('[teaser_break]', '', $this->_content);
-	}
-
-	public function render() {
-		$this->_contentmd = MarkdownExtra::defaultTransform($this->_content);
-		return $this;
-	}
-
-	public function renderTeaser() {
-		$this->_teasermd = MarkdownExtra::defaultTransform($this->_teaser);
-		return $this;
+	public function render($teaser = FALSE) {
+		$return = '';
+		$teaser_break = $this->cfg->get('teaser_break');
+		while($line = fgets($this->_fp)) {
+			if(trim($line) == $teaser_break) {
+				if($teaser) { break; } else { continue; }
+			}
+			$return .= $line;
+		}
+		return $this->renderMdStr($return);
 	}
 
 	public function isPublished() {
@@ -244,6 +258,18 @@ class bContent extends bAbstract {
 
 	public function isContent() {
 		return $this->strBool($this->_isfile);
+	}
+
+	public function hasBreadcrumbs() {
+		return $this->strBool($this->_breadcrumbs);
+	}
+
+	public function isListed() {
+		return $this->strBool($this->_listed);
+	}
+
+	public function __destruct() {
+		fclose($this->_fp);
 	}
 }
 
@@ -326,11 +352,47 @@ class bController {
 	public function indexAction() {
 		// We need to scan the directory of content for the current url.
 		$content_list = rscandir($this->req_path);
+
+		$list = array();
+
+		foreach ($content_list as $content_file) {
+			$content = new bContent($content_file);
+			if(!$content->isListed() ||
+			   !$content->isPublished()) { 
+				unset($content); 
+				continue; 
+			}
+			$time = $content->get('publishtimestamp');
+			$list[$time] = $content;
+			unset($content);
+		}
+
+		// sorting:
+		if($this->cfg->get('post_list_order') == 'oldest') {
+			ksort($list);
+		} else { //newest is default
+			krsort($list);
+		}
+
+		$postcount = $this->cfg->get('post_list_count');
+		$current_page = $this->req->getReqVar('page');
+		if($current_page === FALSE)
+			$current_page = 0;
+		else
+			(int) $current_page;
+
+		$list = array_slice($list, ($current_page * $postcount), $postcount, true);
+
+		$page_list = array();
+		foreach ($list as $key => $content) {
+			
+		}
+
 	}
 
 	public function viewAction() {
 		$content = new bContent($this->cfg, $this->req_uri);
-		if(!$content->isBlog() && !$content->isPage())
+		if(!$content->isContent())
 			return $this->errorAction();
 
 		// This is a content action.
@@ -478,6 +540,11 @@ $list_display = <<<BOL
 <div class="row">
 	<div class="col-md-12">
 	%%teasers%%
+	<hr>
+	<ul class="pager">
+		<li class="previous">%%prev_link%%</li>
+		<li class="next">%%next_link%%</li>
+	</ul>
 	</div>
 </div>
 BOL;
@@ -497,6 +564,8 @@ $bloog = new bloog(new bConfig(array(
 	'cache_enable' 		   => FALSE,
 	'cache_prefix' 		   => 'bloog',
 	'cache_ttl' 		   => 3600,
+	'date_format'		   => 'l F j, Y \a\t h:i:s a',
+	'teaser_break'		   => '[teaser_break]',
 	'template_layout' 	   => $layout,
 	'template_teaser' 	   => $teaser_display,
 	'template_list'   	   => $list_display,
@@ -508,9 +577,12 @@ $bloog = new bloog(new bConfig(array(
 	'title_error'		   => 'Whoops!',
 	'site_description'     => "Simple Blog using bloog",
 	'site_author' 		   => 'bloog',
-	'post_list_pagecount'  => 5,
-	'post_list_order' 	   => 'newest',
+	'post_list_count'      => 5,
+	'post_list_order' 	   => 'newest', // options: newest, oldest
+	'post_list_readmore'   => 'Read More <span class="glyphicon glyphicon-chevron-right"></span>',
 	'post_breadcrumbs'     => TRUE,
+	'pager_next_text'	   => 'Older <span class="glyphicon glyphicon-chevron-right"></span>',
+	'pager_prev_text'	   => '<span class="glyphicon glyphicon-chevron-left"></span> Newer',
 )));
 
 echo $bloog->render();
