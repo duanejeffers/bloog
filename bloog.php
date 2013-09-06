@@ -660,8 +660,7 @@ $error_display = <<<BOL
 BOL;
 
 $bloog = new bloog(new bConfig(array(
-	'bloog_install_path'   => realpath(dirname(__FILE__)),
-	'bloog_path' 		   => dirname(__FILE__),
+	'bloog_path' 		   => realpath($_SERVER['DOCUMENT_ROOT']),
 	'bloog_content' 	   => realpath($_SERVER['DOCUMENT_ROOT'] . '/blogcontent'),
 	'cache_enable' 		   => FALSE,
 	'cache_prefix' 		   => 'bloog',
