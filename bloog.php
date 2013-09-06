@@ -13,6 +13,7 @@
 define('BLOOG_CFG', '.bloogconfig.php');
 define('PATH', '/');
 define('CONT_EXT', '.md');
+define('ANCHOR', '<a href="%s" class="%s">%s</a>');
 define('DEV_LOG', TRUE);
 define('DEV_LOG_LOC', '/var/log/bloog.log');
 
@@ -236,6 +237,13 @@ class bContent extends bAbstract {
 		}
 	}
 
+	public function get($name) {
+		$name = '_' . strtolower($name);
+		if(in_array($name, array_keys(get_object_vars($this)))) {
+			return $this->renderMdStr($this->$name);
+		}
+	}
+
 	public function render($teaser = FALSE) {
 		$return = '';
 		$teaser_break = $this->cfg->get('teaser_break');
@@ -264,8 +272,24 @@ class bContent extends bAbstract {
 		return $this->strBool($this->_breadcrumbs);
 	}
 
+	public function hasComments() {
+		return $this->strBool($this->_comments);
+	}
+
 	public function isListed() {
 		return $this->strBool($this->_listed);
+	}
+
+	public function getTimestamp() {
+		return $this->_publishtimestamp;
+	}
+
+	public function getPublishDate() {
+		return $this->_publishdate;
+	}
+
+	public function getUrl() {
+		return str_replace($this->cfg->get('bloog_content'), '', $this->_content_path);
 	}
 
 	public function __destruct() {
@@ -310,6 +334,7 @@ class bView {
 			'%%description%%' => $this->_cfg->get('site_description'),
 			'%%author%%'	  => $this->_cfg->get('site_author'),
 			'%%content%%'	  => $this->_content,
+
 		);
 		return $this->parse('layout', $data);
 	}
@@ -362,7 +387,7 @@ class bController {
 				unset($content); 
 				continue; 
 			}
-			$time = $content->get('publishtimestamp');
+			$time = $content->getTimestamp();
 			$list[$time] = $content;
 			unset($content);
 		}
@@ -377,17 +402,46 @@ class bController {
 		$postcount = $this->cfg->get('post_list_count');
 		$current_page = $this->req->getReqVar('page');
 		if($current_page === FALSE)
-			$current_page = 0;
+			$current_page = 1;
 		else
 			(int) $current_page;
 
-		$list = array_slice($list, ($current_page * $postcount), $postcount, true);
+		$list = array_slice($list, (($current_page - 1) * $postcount), $postcount, true);
 
 		$page_list = array();
 		foreach ($list as $key => $content) {
-			
+			$page_list[] = $this->view->parse('teaser', array(
+				'%%link%%'  	     => sprintf(ANCHOR,
+												$content->getUrl(),
+												$cfg->get('teaser_link_class'),
+												$cfg->get('teaser_link_text')),
+				'%%title%%' 	     => $content->get('title'),
+				'%%author%%'		 => $content->get('author'),
+				'%%publish_date%%'   => $content->getPublishDate(),
+				'%%teaser_content%%' => $content->render(TRUE),
+				'%%url%%'			 => $content->getUrl(),
+			));
 		}
+		unset($list); //no longer need the list.
 
+		$next_link = sprintf(ANCHOR,
+							 $this->req_uri . '?page=' . $current_page++,
+							 $cfg->get('pager_next_class'),
+							 $cfg->get('pager_next_text'));
+
+		if($current_page < 1) {
+			$prev_link = sprintf(ANCHOR,
+								 $this->req_uri . '?page=' . $current_page--,
+								 $cfg->get('pager_prev_class'),
+								 $cfg->get('pager_prev_text'));
+		} else
+			$prev_link = NULL;
+
+		$this->view->setContent($this->view->parse('list', array(
+			'%%teaser_list%%' => implode($page_list),
+			'%%prev_link%%'   => $prev_link,
+			'%%next_link%%'	  => $next_link,
+		)));
 	}
 
 	public function viewAction() {
@@ -523,13 +577,13 @@ BOL;
 $teaser_display = <<<BOL
 <div class="row">
 	<div class="col-md-12">
-		<h1><a href="%%link%%">%%title%%</a></h1>
+		<h1><a href="%%url%%">%%title%%</a></h1>
 		<hr>
 		%%teaser_content%%
 		<hr>
 		<div class="row">
 			<div class="col-md-6 published"><span class="glyphicon glyphicon-time"></span>Published on %%publish_date%%</div>
-			<div class="col-md-6 pull-right"><a class="btn" href="%%link%%>Read More <span class="glyphicon glyphicon-chevron-right"></span></a></div>
+			<div class="col-md-6 pull-right">%%link%%</div>
 		</div>
 		<hr>
 	</div>
@@ -539,7 +593,7 @@ BOL;
 $list_display = <<<BOL
 <div class="row">
 	<div class="col-md-12">
-	%%teasers%%
+	%%teaser_list%%
 	<hr>
 	<ul class="pager">
 		<li class="previous">%%prev_link%%</li>
@@ -566,6 +620,8 @@ $bloog = new bloog(new bConfig(array(
 	'cache_ttl' 		   => 3600,
 	'date_format'		   => 'l F j, Y \a\t h:i:s a',
 	'teaser_break'		   => '[teaser_break]',
+	'teaser_link_text'	   => 'Read More <span class="glyphicon glyphicon-chevron-right"></span>',
+	'teaser_link_class'	   => 'btn btn-primary',
 	'template_layout' 	   => $layout,
 	'template_teaser' 	   => $teaser_display,
 	'template_list'   	   => $list_display,
@@ -582,7 +638,9 @@ $bloog = new bloog(new bConfig(array(
 	'post_list_readmore'   => 'Read More <span class="glyphicon glyphicon-chevron-right"></span>',
 	'post_breadcrumbs'     => TRUE,
 	'pager_next_text'	   => 'Older <span class="glyphicon glyphicon-chevron-right"></span>',
+	'pager_next_class'	   => '',
 	'pager_prev_text'	   => '<span class="glyphicon glyphicon-chevron-left"></span> Newer',
+	'pager_prev_class'	   => '',
 )));
 
 echo $bloog->render();
