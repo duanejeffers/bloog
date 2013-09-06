@@ -432,6 +432,11 @@ $layout = <<<BOL
     <meta name="description" content="%%description%%">
     <meta name="author" content="%%author%%">
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
+    <style type="text/css">
+    	.container {
+    		margin: 10px auto;
+    	}
+    </style>
   </head>
   <body>
   	<div class="container">
