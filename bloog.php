@@ -223,9 +223,8 @@ class bContent extends bAbstract {
 				if(strpos($line, '---') !== FALSE) { 
 					break;
 				}
-				$break = strpos($line, ':');
-				$key = substr($line, 1, ($break - 1));
-				$setting = substr($line, ($break + 1));
+				$line = trim(trim($line), '#');
+				list($key, $setting) = explode(':', $line, 1);
 				logme($line, $key, $setting);
 				call_user_func(array($this, 'set'), trim($key), trim($setting));
 			}
