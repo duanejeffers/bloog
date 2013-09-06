@@ -270,7 +270,13 @@ class bView {
 	}
 
 	public function render() {
-		return $this->parse('layout');
+		$data = array(
+			'%%title%%'       => $this->getTitle(),
+			'%%description%%' => $this->_cfg->get('site_description'),
+			'%%author%%'	  => $this->_cfg->get('site_author'),
+			'%%content%%'	  => $this->_content,
+		);
+		return $this->parse('layout', $data);
 	}
 }
 
@@ -284,7 +290,11 @@ class bController {
 	public function __construct(bConfig $cfg, $req = NULL) {
 		$this->cfg = $cfg;
 		$this->req = $req;
-		$this->req_uri = $this->req->getServer('REQUEST_URI');
+		if(is_string($req))
+			$this->req_uri = $req;
+		elseif($req instanceof bRequest)
+			$this->req_uri = $this->req->getServer('REQUEST_URI');
+
 		$this->req_path = $this->cfg->get('bloog_content') . $this->req_uri;
 
 		$this->view = new bView($this->cfg);
@@ -292,8 +302,6 @@ class bController {
 		if($this->cfg->get('title_sitename_affix') == 'prefix') {
 			$this->view->setTitle($this->cfg->get('title_sitename'));
 		}
-
-		logme($this->cfg->get('bloog_content'), $this->req_path);
 		return $this;
 	}
 
@@ -316,6 +324,8 @@ class bController {
 		$content = new bContent($this->cfg, $req_uri);
 		if(!$content->isBlog() && !$content->isPage())
 			return $this->errorAction();
+
+		// This is a content action.
 
 
 	}
@@ -453,7 +463,11 @@ $list_display = <<<BOL
 BOL;
 
 $error_display = <<<BOL
-
+<div class="jumbotron">
+	<h1>Whoops!</h1>
+	<p>It looks like the content you're looking for doesn't exist.</p>
+	<p><a class="btn btn-primary btn-lg" onclick="window.history.back();">Go Back</a></p>
+</div>
 BOL;
 
 $bloog = new bloog(new bConfig(array(
