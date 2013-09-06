@@ -316,8 +316,8 @@ class bView {
 		$this->_cfg = $cfg;
 	}
 
-	public function setContent($content) {
-		$this->_content = $content;
+	public function setContent($parser, $content_arr = array()) {
+		$this->_content = $this->parse($parser, $content_arr);
 		return $this;
 	}
 
@@ -454,31 +454,38 @@ class bController {
 		} else
 			$prev_link = NULL;
 
-		$this->view->setContent($this->view->parse('list', array(
+		$this->view->setContent('list', array(
 			'%%teaser_list%%' => implode($page_list),
 			'%%prev_link%%'   => $prev_link,
 			'%%next_link%%'	  => $next_link,
-		)));
+		));
 	}
 
 	public function viewAction() {
-		logme($this->req_path);
 		$content = new bContent($this->cfg, $this->req_path);
-		logme($content);
 		if(!$content->isContent())
 			return $this->errorAction();
 
 		// This is a content action.
 
+		$this->view->setContent('post', array(
+			'%%link%%'  	     => sprintf(ANCHOR,
+											$content->getUrl(),
+											$this->cfg->get('teaser_link_class'),
+											$this->cfg->get('teaser_link_text')),
+			'%%title%%' 	     => $content->get('title'),
+			'%%author%%'		 => $content->get('author'),
+			'%%publish_date%%'   => $content->getPublishDate(),
+			'%%tpost_content%%' => $content->render(TRUE),
+			'%%url%%'			 => $content->getUrl(),
+		));
 
 	}
 
 	public function errorAction() {
-		$content = $this->view->parse('error');
-
 		$this->view->setTitle($this->cfg->get('title_error'));
 
-		$this->view->setContent($content);
+		$this->view->setContent('error');
 	}
 
 	public function render() {
