@@ -225,7 +225,6 @@ class bContent extends bAbstract {
 				}
 				$line = trim(trim($line), '#');
 				list($key, $setting) = explode(':', $line, 2);
-				logme($line, $key, $setting);
 				call_user_func(array($this, 'set'), trim($key), trim($setting));
 			}
 			$this->_fp = $fp;
@@ -387,7 +386,7 @@ class bController {
 
 		foreach ($content_list as $content_file) {
 			$content = new bContent($this->cfg, $content_file);
-			//logme($content);
+			logme($content);
 			if(!$content->isListed() ||
 			   !$content->isPublished()) { 
 				unset($content); 
