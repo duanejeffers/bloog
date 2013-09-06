@@ -74,43 +74,6 @@ function bcache_invalid() {
 	}
 }
 
-abstract class bAbstract {
-	protected $cfg;
-
-	public function get($name) {
-		$name = '_' . strtolower($name);
-		if(in_array($name, array_keys(get_object_vars($this)))) {
-			return $this->$name;
-		}
-	}
-
-	public function set($name, $value) {
-		$name = '_' . strtolower($name);
-		if(in_array($name, array_keys(get_object_vars($this)))) {
-			$this->$name = $value;
-		}
-		return $this;
-	}
-
-	abstract public function init();
-
-	public function __construct(bConfig $cfg = NULL) {
-		$args = func_get_args();
-		$this->cfg = array_shift($args);
-
-		call_user_func_array(array($this, 'init'), $args);
-
-		return $this;
-	}
-
-	public function strBool($opt) {
-		if(strtoupper($opt) === 'TRUE' || (is_bool($opt) && $opt)) {
-			return TRUE;
-		}
-		return FALSE;
-	}
-}
-
 // config class.
 class bConfig {
 	protected $_configArr = array();
@@ -188,8 +151,9 @@ class bRequest {
 
 }
 
-class bContent extends bAbstract {
+class bContent {
 	private $_fp = NULL;
+	protected $cfg;
 	protected $_content_path = NULL;
 	protected $_title = NULL;
 	protected $_author = NULL;
@@ -218,8 +182,16 @@ class bContent extends bAbstract {
 		$this->_publishtimestamp = $time;
 	}
 
-	public function init() {
-		$this->_content_path = func_get_arg(0);
+	public function strBool($opt) {
+		if(strtoupper($opt) === 'TRUE' || (is_bool($opt) && $opt)) {
+			return TRUE;
+		}
+		return FALSE;
+	}
+
+	public function __construct(bConfig $cfg = NULL, $path) {
+		$this->cfg = $cfg;
+		$this->_content_path = $path;
 		// Check to see if content is available:
 		$this->_isfile = is_file($this->_content_path);
 		if(($addext = is_file($this->_content_path . CONT_EXT)) ||
@@ -252,6 +224,15 @@ class bContent extends bAbstract {
 		if(in_array($name, array_keys(get_object_vars($this)))) {
 			return $this->renderMdStr($this->$name);
 		}
+	}
+
+	public function set($name, $value) {
+		$name = '_' . strtolower($name);
+		if(in_array($name, array_keys(get_object_vars($this)))) {
+			$this->$name = $value;
+			return TRUE;
+		}
+		return FALSE;
 	}
 
 	public function render($teaser = FALSE) {
@@ -336,7 +317,7 @@ class bView {
 			$template = $this->_cfg->get($template_type);
 			switch(gettype($template)) {
 				case 'object':
-					return call_user_func($template, $data);
+					return call_user_func_array($template, array($data, $this));
 					break;
 				case 'string':
 					return str_replace(array_keys($data), array_values($data), $this->_cfg->get($template_type));
