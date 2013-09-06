@@ -381,7 +381,7 @@ class bController {
 		$list = array();
 
 		foreach ($content_list as $content_file) {
-			$content = new bContent($content_file);
+			$content = new bContent($this->cfg, $content_file);
 			if(!$content->isListed() ||
 			   !$content->isPublished()) { 
 				unset($content); 
