@@ -67,14 +67,14 @@ function bcache_invalid() {
 abstract class bAbstract {
 	protected $cfg;
 
-	public function __get($name) {
+	public function get($name) {
 		$name = '_' . strtolower($name);
 		if(in_array($name, array_keys(get_object_vars($this)))) {
 			return $this->$name;
 		}
 	}
 
-	public function __set($name, $value) {
+	public function set($name, $value) {
 		$name = '_' . strtolower($name);
 		if(in_array($name, array_keys(get_object_vars($this)))) {
 			$this->$name = $value;
@@ -91,6 +91,13 @@ abstract class bAbstract {
 		call_user_func_array(array($this, 'init'), $args);
 
 		return $this;
+	}
+
+	public function strBool($opt) {
+		if(strtoupper($opt) === 'TRUE' || $opt == TRUE) {
+			return TRUE;
+		}
+		return FALSE;
 	}
 }
 
@@ -171,6 +178,8 @@ class bRequest {
 }
 
 class bContent extends bAbstract {
+	private $_fp = NULL;
+	protected $_content_path = NULL;
 	protected $_title = NULL;
 	protected $_content = NULL;
 	protected $_contentmd = NULL;
@@ -178,32 +187,35 @@ class bContent extends bAbstract {
 	protected $_teasermd = NULL;
 	protected $_author = NULL;
 	protected $_publishdate = NULL;
+	protected $_published = NULL;
 	protected $_comments = TRUE;
 	protected $_breadcrumbs = TRUE;
-	protected $_blog = TRUE;
-	protected $_page = FALSE; // by default, we need to specify that it isn't a page.
+	protected $_isfile = FALSE;
+
+	private function renderMdStr($string) {
+		return MarkdownExtra::defaultTransform($string);
+	}
 
 	public function init() {
-		$uri = func_get_arg(0);
-		$dir = $this->cfg->get('bloog_content');
+		$this->content_path = func_get_arg(0) . CONT_EXT;
 		// Check to see if content is available:
-		if(($blog = is_file($dir . $uri . CONT_EXT)) ||
-		   ($page = is_file($dir . PATH . 'pages' . $uri . CONT_EXT))) {
-		   	$this->_blog = $blog;
-			$this->_page = $page;
-
-			$this->_content = file_get_contents($dir . ($page ? PATH . 'pages': '') . $uri . CONT_EXT);
-
-			$settings = parse_ini_string(strstr($this->_content, '---', true));
-			foreach ($settings as $key => $value) {
-				$func = '_' . strtolower($key);
-
-				$this->$func = $value;
-			}
-
-			$this->_content = substr(strstr($this->_content, '---'), 3);
-
-			$this->parseTeaser();
+		$this->_isfile = is_file($this->content_path);
+		if($this->isContent()) {
+			$fp = fopen($this->content_path, 'r');
+			$opts_parse = TRUE;
+			do {
+				$line = fgets($fp);
+				if(strpos($line, '---') !== FALSE) { 
+					$opts_parse = FALSE; 
+				} else {
+					$setting = sscanf($line, "#%s:%s");
+					$setting = array_map('trim', $setting);
+					call_user_func_array(array($this, 'set'), $setting);
+				}
+			} while($opts_parse);
+			$this->_fp = $fp;
+		} else {
+			return FALSE;
 		}
 	}
 
@@ -223,18 +235,15 @@ class bContent extends bAbstract {
 	}
 
 	public function isPublished() {
-		if(!is_null($this->_publishdate) && (time() > strtotime($this->_publishdate))) {
+		if((!is_null($this->_publishdate) && (time() > strtotime($this->_publishdate))) || 
+			$this->strBool($this->_published)) {
 			return TRUE;
 		}
 		return FALSE;
 	}
 
-	public function isPage() {
-		return ($this->_page == TRUE ? TRUE : FALSE);
-	}
-
-	public function isBlog() {
-		return ($this->_blog == TRUE ? TRUE : FALSE);
+	public function isContent() {
+		return $this->strBool($this->_isfile);
 	}
 }
 
@@ -316,7 +325,7 @@ class bController {
 
 	public function indexAction() {
 		// We need to scan the directory of content for the current url.
-
+		$content_list = rscandir($this->req_path);
 	}
 
 	public function viewAction() {
@@ -386,8 +395,6 @@ class bloog {
 			$cfg->mergeConfigFile($rootcfg);
 		}
 		$this->cfg = $cfg;
-		$content_path = $cfg->get('bloog_content');
-		logme($cfg, $content_path);
 	}
 
 	public function render() {
