@@ -97,6 +97,7 @@ abstract class bAbstract {
 	}
 
 	public function strBool($opt) {
+		logme($opt);
 		if(strtoupper($opt) === 'TRUE' || $opt == TRUE) {
 			return TRUE;
 		}
