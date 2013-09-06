@@ -342,7 +342,7 @@ class bViewHelper extends bAbstract {
 		foreach ($type as $value) {
 			$return[] = sprintf($format, $value);
 		}
-		return implode("\n", $return);
+		return implode("\n\t", $return);
 	}
 
 	public function renderLink() {
@@ -360,7 +360,7 @@ class bViewHelper extends bAbstract {
 							  (isset($script['src']) ? ' src="' . $script['src'] . '"' : NULL),
 							  (isset($script['code']) ? $script['code'] : NULL));
 		}
-		return implode("\n", $return);
+		return implode("\n\t", $return);
 	}
 }
 
