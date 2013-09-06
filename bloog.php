@@ -13,7 +13,6 @@
 define('BLOOG_CFG', '.bloogconfig.php');
 define('PATH', '/');
 define('CONT_EXT', '.md');
-define('ANCHOR', '<a href="%s" class="%s">%s</a>');
 define('DEV_LOG', TRUE);
 define('DEV_LOG_LOC', '/var/log/bloog.log');
 
@@ -301,9 +300,9 @@ class bContent extends bAbstract {
 
 class bViewHelper extends bAbstract {
 	protected $_title = array();
-	protected $_link;
-	protected $_style;
-	protected $_script;
+	protected $_link = array();
+	protected $_style = array();
+	protected $_script = array();
 
 	protected function init() {
 		$this->_link = $this->cfg->get('view_link');
@@ -319,12 +318,31 @@ class bViewHelper extends bAbstract {
 		return implode($this->_title, $this->cfg->get('title_separator'));
 	}
 
+	public function addStyle($style) {
+		$this->_style[] = $style;
+		return $this;
+	}
+
+	public function addLink($link) {
+		$this->_link[] = $link;
+		return $this;
+	}
+
+	public function addScript($src = NULL, $code = NULL) {
+		$js_arr = array();
+		if(!is_null($src)) {
+			$js_arr[] = array('src' => $src);
+		} elseif (!is_null($code)) {
+			$js_arr[] = array('code' => $code);
+		}
+		return $this;
+	}
+
 	public function renderer($type, $format) {
 		$return = array();
 		foreach ($type as $value) {
 			$return[] = sprintf($format, $value);
 		}
-
 		return implode($return);
 	}
 
@@ -334,6 +352,16 @@ class bViewHelper extends bAbstract {
 
 	public function renderStyle() {
 		return $this->renderer($this->_style, "<style type=\"text/css\">\n %s \n</style>");
+	}
+
+	public function renderScript() {
+		$return = array();
+		foreach($this->_script as $script) {
+			$return[] = sprintf('<script%s>%s</script>',
+							  (isset($script['src']) ? ' src="' . $script['src'] : NULL),
+							  (isset($script['code']) ? $script['code'] : NULL));
+		}
+		return implode($return);
 	}
 }
 
@@ -455,7 +483,7 @@ class bController extends bAbstract {
 		$page_list = array();
 		foreach ($list as $key => $content) {
 			$page_list[] = $this->view->parse('teaser', array(
-				'link'  	     => sprintf(ANCHOR,
+				'link'  	     => sprintf($this->cfg->get('anchor_format'),
 												$content->getUrl(),
 												$this->cfg->get('teaser_link_class'),
 												$this->cfg->get('teaser_link_text')),
@@ -469,7 +497,7 @@ class bController extends bAbstract {
 		unset($list); //no longer need the list.
 
 		if($listcount > count($page_list)) {
-			$next_link = sprintf(ANCHOR,
+			$next_link = sprintf($this->cfg->get('anchor_format'),
 								 $this->req_uri . '?page=' . $current_page++,
 								 $this->cfg->get('pager_next_class'),
 								 $this->cfg->get('pager_next_text'));
@@ -477,7 +505,7 @@ class bController extends bAbstract {
 			$next_link = NULL;
 
 		if($current_page < 1) {
-			$prev_link = sprintf(ANCHOR,
+			$prev_link = sprintf($this->cfg->get('anchor_format'),
 								 $this->req_uri . '?page=' . $current_page--,
 								 $this->cfg->get('pager_prev_class'),
 								 $this->cfg->get('pager_prev_text'));
@@ -493,21 +521,22 @@ class bController extends bAbstract {
 
 	public function viewAction() {
 		$content = new bContent($this->cfg, $this->req_path);
-		if(!$content->isContent())
+		if(!$content->isContent() || !$this->isPublished())
 			return $this->errorAction();
 
 		// This is a content action.
-
 		$this->view->setContent('post', array(
-			'link'  	     => sprintf(ANCHOR,
-											$content->getUrl(),
-											$this->cfg->get('teaser_link_class'),
-											$this->cfg->get('teaser_link_text')),
+			'link'  	     => sprintf($this->cfg->get('anchor_format'),
+										$content->getUrl(),
+										$this->cfg->get('teaser_link_class'),
+										$this->cfg->get('teaser_link_text')),
 			'title' 	     => $content->get('title'),
 			'author'		 => $content->get('author'),
 			'publish_date'   => $content->getPublishDate(),
 			'post_content'   => $content->render(),
 			'url'			 => $content->getUrl(),
+			'comments'		 => $content->hasComments(),
+			'breadcrumbs'	 => $content->hasBreadcrumbs(),
 		));
 
 	}
@@ -559,11 +588,8 @@ class bRouter extends bAbstract {
 class bloog extends bAbstract {
 	protected function init() {
 		$rootcfg = $this->cfg->get('bloog_path') . PATH . BLOOG_CFG;
-		logme($rootcfg);
 		if(is_file($rootcfg)) {
 			$this->cfg->mergeConfigFile($rootcfg);
-
-			logme($this->cfg);
 		}
 	}
 
@@ -679,6 +705,7 @@ $error_display = <<<BOL
 BOL;
 
 $bloog = new bloog(new bConfig(array(
+	'anchor_format'		   => '<a href="%s" class="%s">%s</a>',
 	'bloog_path' 		   => realpath($_SERVER['DOCUMENT_ROOT']),
 	'bloog_content' 	   => realpath($_SERVER['DOCUMENT_ROOT'] . '/blogcontent'),
 	'cache_enable' 		   => FALSE,
