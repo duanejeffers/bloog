@@ -212,12 +212,13 @@ class bContent extends bAbstract {
 	}
 
 	public function init() {
-		$this->content_path = func_get_arg(0);
+		$this->_content_path = func_get_arg(0);
+		logme($this->_content_path);
 		// Check to see if content is available:
-		$this->_isfile = is_file($this->content_path);
-		if(($addext = is_file($this->content_path . CONT_EXT)) ||
+		$this->_isfile = is_file($this->_content_path);
+		if(($addext = is_file($this->_content_path . CONT_EXT)) ||
 			$this->isContent()) {
-			$fp = fopen($this->content_path . ($addext ? CONT_EXT : ''), 'r');
+			$fp = fopen($this->_content_path . ($addext ? CONT_EXT : ''), 'r');
 			
 			while($line = fgets($fp)) {
 				if(strpos($line, '---') !== FALSE) { 
@@ -230,7 +231,7 @@ class bContent extends bAbstract {
 			$this->_fp = $fp;
 			$this->fmtPublishDate();
 			if(!$addext) {
-				$this->content_path = str_replace(array(strtoupper(CONT_EXT), strtolower(CONT_EXT)), '', $this->content_path);
+				$this->_content_path = str_replace(array(strtoupper(CONT_EXT), strtolower(CONT_EXT)), '', $this->content_path);
 			} else {
 				$this->_isfile = $addext;
 			}
