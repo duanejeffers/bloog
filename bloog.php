@@ -121,6 +121,10 @@ class bConfig {
 		return FALSE;
 	}
 
+	public function set($key, $value) {
+
+	}
+
 	public function isOpt($key) {
 		return array_key_exists($key, $this->_configArr);
 	}
@@ -175,6 +179,7 @@ class bContent extends bAbstract {
 	protected $_breadcrumbs = TRUE;
 	protected $_listed = FALSE; // If true, content will show in list view.
 	protected $_isfile = FALSE;
+	protected $_content_options = array();
 
 	private function renderMdStr($string) {
 		return MarkdownExtra::defaultTransform($string);
@@ -214,7 +219,10 @@ class bContent extends bAbstract {
 				}
 				$line = trim(trim($line), '#');
 				list($key, $setting) = explode(':', $line, 2);
-				call_user_func(array($this, 'set'), trim($key), trim($setting));
+				$objOpt = $this->set(($key = trim($key)), ($setting = trim($setting)));
+				if(!$objOpt) {
+					$this->_content_options[$key] = $setting;
+				}
 			}
 			$this->_fp = $fp;
 			$this->fmtPublishDate();
@@ -250,7 +258,8 @@ class bContent extends bAbstract {
 		$teaser_break = $this->cfg->get('teaser_break');
 		while($line = fgets($this->_fp)) {
 			if(trim($line) == $teaser_break) {
-				if($teaser) { break; } else { continue; }
+				$line = $this->cfg->get('teaser_html');
+				if($teaser) { break; }
 			}
 			$return .= $line;
 		}
@@ -410,7 +419,7 @@ class bView extends bAbstract {
 	}
 }
 
-class bController extends bAbstract {
+class bControllerSimple extends bAbstract {
 	protected $view;
 	protected $req;
 	protected $req_uri;
@@ -433,16 +442,25 @@ class bController extends bAbstract {
 		return $this;
 	}
 
-	public function defaultAction() {
-		// Now we need to specify if this is a folder or file.
-		if(is_dir($this->req_path)) {
-			$this->indexAction();
-		} else { // this is not a directory view.
-			$this->viewAction();
-		}
+	public function getView() {
+		return $this->view;
 	}
 
-	public function indexAction() {
+	public function getReq() {
+		return $this->req;
+	}
+
+	public function getReqUri() {
+		return $this->req_uri;
+	}
+
+	public function getReqPath() {
+		return $this->req_path;
+	}
+}
+
+class bController extends bControllerSimple {
+	public function genPostList() {
 		// We need to scan the directory of content for the current url.
 		$content_list = rscandir($this->req_path);
 		$list = array();
@@ -467,6 +485,20 @@ class bController extends bAbstract {
 			krsort($list);
 		}
 
+		return $list;
+	}
+
+	public function defaultAction() {
+		// Now we need to specify if this is a folder or file.
+		if(is_dir($this->req_path)) {
+			$this->indexAction();
+		} else { // this is not a directory view.
+			$this->viewAction();
+		}
+	}
+
+	public function indexAction() {
+		$list = $this->genPostList();
 		$postcount = $this->cfg->get('post_list_count');
 		$current_page = $this->req->getReqVar('page');
 		if($current_page === FALSE)
@@ -538,6 +570,10 @@ class bController extends bAbstract {
 
 	}
 
+	public function rssAction() {
+
+	}
+
 	public function errorAction() {
 		$this->view->getHelper()->setTitle($this->cfg->get('title_error'));
 
@@ -550,7 +586,6 @@ class bController extends bAbstract {
 		}
 
 		return $this->view->render();
-
 	}
 }
 
@@ -602,10 +637,19 @@ class bloog extends bAbstract {
 			}
 		});
 
+		foreach($this->cfg->get('add_paths') as $path => $callback) {
+			$router->path($path, $callback);
+		}
+
 		$router->path('/', function($cfg, $req) {
-			logme('Calling Root');
 			$controller = new bController($cfg, $req);
 			$controller->indexAction();
+			return $controller->render();
+		});
+
+		$router->path('/rss', function($cfg, $req) {
+			$controller = new bController($cfg, '/'); // Force use of root.
+			$controller->rssAction();
 			return $controller->render();
 		});
 
@@ -703,8 +747,10 @@ BOL;
 
 $bloog = new bloog(new bConfig(array(
 	'anchor_format'		   => '<a href="%s" class="%s">%s</a>',
+	'add_paths'			   => array(),
 	'bloog_path' 		   => realpath($_SERVER['DOCUMENT_ROOT']),
 	'bloog_content' 	   => realpath($_SERVER['DOCUMENT_ROOT'] . '/blogcontent'),
+	'bloog_webpath'		   => $_SERVER['SERVER_NAME'],
 	'cache_enable' 		   => FALSE,
 	'cache_prefix' 		   => 'bloog',
 	'cache_ttl' 		   => 3600,
@@ -712,6 +758,7 @@ $bloog = new bloog(new bConfig(array(
 	'teaser_break'		   => '[teaser_break]',
 	'teaser_link_text'	   => 'Read More <span class="glyphicon glyphicon-chevron-right"></span>',
 	'teaser_link_class'	   => 'btn btn-primary',
+	'teaser_html'		   => '<hr>', // Teaser html to replace the [teaser_break]
 	'template_layout' 	   => $layout,
 	'template_teaser' 	   => $teaser_display,
 	'template_list'   	   => $list_display,
@@ -723,6 +770,7 @@ $bloog = new bloog(new bConfig(array(
 	'title_error'		   => 'Whoops!',
 	'site_description'     => "Simple Blog using bloog",
 	'site_author' 		   => 'bloog',
+	'rss_enable'		   => FALSE,
 	'post_list_count'      => 5,
 	'post_list_order' 	   => 'newest', // options: newest, oldest
 	'post_breadcrumbs'     => TRUE,
