@@ -308,6 +308,8 @@ class bViewHelper extends bAbstract {
 		$this->_link = $this->cfg->get('view_link');
 		$this->_style = $this->cfg->get('view_style');
 		$this->_script = $this->cfg->get('view_script');
+
+		logme($this);
 	}
 
 	public function setTitle($title) {
@@ -329,11 +331,10 @@ class bViewHelper extends bAbstract {
 	}
 
 	public function addScript($src = NULL, $code = NULL) {
-		$js_arr = array();
 		if(!is_null($src)) {
-			$js_arr[] = array('src' => $src);
+			$this->_script[] = array('src' => $src);
 		} elseif (!is_null($code)) {
-			$js_arr[] = array('code' => $code);
+			$this->_script[] = array('code' => $code);
 		}
 		return $this;
 	}
