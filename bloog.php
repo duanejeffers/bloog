@@ -391,9 +391,9 @@ class bController extends bAbstract {
 
 	protected function init() {
 		$this->req = func_get_arg(0);
-		if(is_string($req))
+		if(is_string($this->req))
 			$this->req_uri = $req;
-		elseif($req instanceof bRequest)
+		elseif($this->req instanceof bRequest)
 			$this->req_uri = $this->req->getServer('REQUEST_URI');
 
 		$this->req_path = path_check($this->cfg->get('bloog_content') . $this->req_uri);
