@@ -431,6 +431,8 @@ class bController {
 		}
 		unset($list); //no longer need the list.
 
+		logme($listcount, count($list));
+
 		if($listcount > count($list)) {
 			$next_link = sprintf(ANCHOR,
 								 $this->req_uri . '?page=' . $current_page++,
