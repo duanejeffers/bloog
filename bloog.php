@@ -221,6 +221,7 @@ class bContent extends bAbstract {
 			$fp = fopen($this->_content_path . ($addext ? CONT_EXT : ''), 'r');
 			
 			while($line = fgets($fp)) {
+				logme($line);
 				if(strpos($line, '---') !== FALSE) { 
 					break;
 				}
