@@ -531,6 +531,7 @@ class bloog {
 		});
 
 		$router->path('/', function($cfg, $req) {
+			logme('Calling Root');
 			$controller = new bController($cfg, $req);
 			$controller->indexAction();
 			return $controller->render();
