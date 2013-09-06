@@ -412,7 +412,8 @@ class bController {
 		else
 			(int) $current_page;
 
-		$list = array_slice($list, (($current_page - 1) * $postcount), $postcount, true);
+		$listcount = count($list);
+		$list = array_slice($list, (($current_page - 1) * $postcount), ($postcount === 0 ? NULL : $postcount), true);
 
 		$page_list = array();
 		foreach ($list as $key => $content) {
@@ -430,10 +431,13 @@ class bController {
 		}
 		unset($list); //no longer need the list.
 
-		$next_link = sprintf(ANCHOR,
-							 $this->req_uri . '?page=' . $current_page++,
-							 $this->cfg->get('pager_next_class'),
-							 $this->cfg->get('pager_next_text'));
+		if($listcount > count($list)) {
+			$next_link = sprintf(ANCHOR,
+								 $this->req_uri . '?page=' . $current_page++,
+								 $this->cfg->get('pager_next_class'),
+								 $this->cfg->get('pager_next_text'));
+		} else
+			$next_link = NULL;
 
 		if($current_page < 1) {
 			$prev_link = sprintf(ANCHOR,
@@ -564,13 +568,13 @@ $layout = <<<BOL
     <meta name="author" content="%%author%%">
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
     <style type="text/css">
-    	.container {
+    	.container-fluid {
     		margin: 10px auto;
     	}
     </style>
   </head>
   <body>
-  	<div class="container">
+  	<div class="container-fluid">
   	%%content%%
   	</div>
   	<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
@@ -590,8 +594,8 @@ $teaser_display = <<<BOL
 		%%teaser_content%%
 		<hr>
 		<div class="row">
-			<div class="col-md-6 published"><span class="glyphicon glyphicon-time"></span>Published on %%publish_date%%</div>
-			<div class="col-md-6 pull-right">%%link%%</div>
+			<div class="col-md-10 published"><span class="glyphicon glyphicon-time"></span>Published on %%publish_date%%</div>
+			<div class="col-md-2 readmore pull-right">%%link%%</div>
 		</div>
 		<hr>
 	</div>
@@ -600,7 +604,7 @@ BOL;
 
 $list_display = <<<BOL
 <div class="row">
-	<div class="col-md-12">
+	<div class="col-md-10 col-md-offset-1">
 	%%teaser_list%%
 	<hr>
 	<ul class="pager">
