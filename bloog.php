@@ -350,7 +350,7 @@ class bViewHelper extends bAbstract {
 	}
 
 	public function renderStyle() {
-		return $this->renderer($this->_style, "<style type=\"text/css\">\n %s \n</style>");
+		return $this->renderer($this->_style, "<style type=\"text/css\">\n %s \n\t</style>");
 	}
 
 	public function renderScript() {
