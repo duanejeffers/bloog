@@ -357,7 +357,7 @@ class bViewHelper extends bAbstract {
 		$return = array();
 		foreach($this->_script as $script) {
 			$return[] = sprintf('<script%s>%s</script>',
-							  (isset($script['src']) ? ' src="' . $script['src'] : NULL),
+							  (isset($script['src']) ? ' src="' . $script['src'] . '"' : NULL),
 							  (isset($script['code']) ? $script['code'] : NULL));
 		}
 		return implode($return);
