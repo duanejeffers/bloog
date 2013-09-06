@@ -701,7 +701,6 @@ $bloog = new bloog(new bConfig(array(
 	'site_author' 		   => 'bloog',
 	'post_list_count'      => 5,
 	'post_list_order' 	   => 'newest', // options: newest, oldest
-	'post_list_readmore'   => 'Read More <span class="glyphicon glyphicon-chevron-right"></span>',
 	'post_breadcrumbs'     => TRUE,
 	'pager_next_text'	   => 'Older <span class="glyphicon glyphicon-chevron-right"></span>',
 	'pager_next_class'	   => '',
