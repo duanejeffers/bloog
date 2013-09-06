@@ -14,6 +14,8 @@ define('BLOOG_CFG', '.bloogconfig.php');
 define('PATH', '/');
 define('CONT_EXT', '.md');
 define('ANCHOR', '<a href="%s" class="%s">%s</a>');
+define('DEV_LOG', TRUE);
+define('DEV_LOG_LOC', '/var/log/bloog.log');
 
 require_once('vendor/autoload.php');
 
@@ -331,7 +333,15 @@ class bView {
 	public function parse($type, $data = array()) {
 		$template_type = 'template_' . $type;
 		if($this->_cfg->isOpt($template_type)) {
-			return str_replace(array_keys($data), array_values($data), $this->_cfg->get($template_type));
+			$template = $this->_cfg->get($template_type);
+			switch(gettype($template)) {
+				case 'object':
+					return call_user_func($template, $data);
+					break;
+				case 'string':
+					return str_replace(array_keys($data), array_values($data), $this->_cfg->get($template_type));
+					break;
+			}
 		}
 		return NULL;
 	}
