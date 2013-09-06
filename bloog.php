@@ -14,7 +14,7 @@ define('BLOOG_CFG', '.bloogconfig.php');
 define('PATH', '/');
 define('CONT_EXT', '.md');
 define('ANCHOR', '<a href="%s" class="%s">%s</a>');
-define('DEV_LOG', FALSE);
+define('DEV_LOG', TRUE);
 define('DEV_LOG_LOC', '/var/log/bloog.log');
 
 require_once('vendor/autoload.php');
