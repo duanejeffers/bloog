@@ -568,13 +568,13 @@ $layout = <<<BOL
     <meta name="author" content="%%author%%">
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
     <style type="text/css">
-    	.container-fluid {
+    	.container {
     		margin: 10px auto;
     	}
     </style>
   </head>
   <body>
-  	<div class="container-fluid">
+  	<div class="container">
   	%%content%%
   	</div>
   	<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
@@ -604,7 +604,7 @@ BOL;
 
 $list_display = <<<BOL
 <div class="row">
-	<div class="col-md-10 col-md-offset-1">
+	<div class="col-md-12">
 	%%teaser_list%%
 	<ul class="pager">
 		<li class="previous">%%prev_link%%</li>
