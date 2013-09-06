@@ -223,7 +223,7 @@ class bContent extends bAbstract {
 				if(strpos($line, '---') !== FALSE) { 
 					break;
 				}
-				$setting = sscanf($line, "#%[^&]:%[^&]");
+				$setting = sscanf($line, "#%[^$]s:%[^$]s");
 				logme($line, $setting);
 				$setting = array_map('trim', $setting);
 				call_user_func_array(array($this, 'set'), $setting);
@@ -387,13 +387,13 @@ class bController {
 
 		foreach ($content_list as $content_file) {
 			$content = new bContent($this->cfg, $content_file);
-			logme($content);
+			//logme($content);
 			if(!$content->isListed() ||
 			   !$content->isPublished()) { 
 				unset($content); 
 				continue; 
 			}
-			logme($content);
+			//logme($content);
 			$time = $content->getTimestamp();
 			$list[$time] = $content;
 			unset($content);
