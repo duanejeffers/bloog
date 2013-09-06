@@ -79,7 +79,7 @@ abstract class bAbstract {
 
 	public function __construct() {
 		$args = func_get_args();
-		$this->cfg = array_shift();
+		$this->cfg = array_shift($args);
 
 		return call_user_func_array(array($this, 'init'), $args);
 	}
@@ -306,7 +306,7 @@ class bViewHelper extends bAbstract {
 	protected $_script;
 
 	protected function init() {
-		
+
 	}
 
 	public function setTitle($title) {
