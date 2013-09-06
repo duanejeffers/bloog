@@ -329,7 +329,7 @@ class bViewHelper extends bAbstract {
 	}
 
 	public function renderLink() {
-		return $this->renderer($this->_link, '<link rel="stylesheet" href="%s"');
+		return $this->renderer($this->_link, '<link rel="stylesheet" href="%s">');
 	}
 
 	public function renderStyle() {
