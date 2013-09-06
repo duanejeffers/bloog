@@ -308,8 +308,6 @@ class bViewHelper extends bAbstract {
 		$this->_link = $this->cfg->get('view_link');
 		$this->_style = $this->cfg->get('view_style');
 		$this->_script = $this->cfg->get('view_script');
-
-		logme($this);
 	}
 
 	public function setTitle($title) {
@@ -734,7 +732,7 @@ $bloog = new bloog(new bConfig(array(
 	'pager_next_class'	   => '',
 	'pager_prev_text'	   => '<span class="glyphicon glyphicon-chevron-left"></span> Newer',
 	'pager_prev_class'	   => '',
-	'view_js'			   => array(array('src' => '//code.jquery.com/jquery.js'),
+	'view_script'		   => array(array('src' => '//code.jquery.com/jquery.js'),
 									array('src' => '//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js')),
 	'view_link'			   => array('//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css'),
 	'view_style'		   => array(),
