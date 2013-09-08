@@ -535,7 +535,8 @@ class bController extends bControllerSimple {
 		}
 		unset($list); //no longer need the list.
 
-		if($listcount < count($page_list)) {
+		logme($listcount, count($page_list), $current_page);
+		if($listcount > count($page_list)) {
 			$next_link = sprintf($this->cfg->get('anchor_format'),
 								 $this->req_uri . '?page=' . $current_page++,
 								 $this->cfg->get('pager_next_class'),
