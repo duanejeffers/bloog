@@ -153,6 +153,12 @@ class bRequest {
 		return FALSE;
 	}
 
+	public function getReqUri() {
+		$parse = parse_url($this->_server['REQUEST_URI']);
+
+		return $parse["path"];
+	}
+
 	public function getServer($key = NULL) {
 		return $this->get($this->_server, $key);
 	}
@@ -371,6 +377,10 @@ class bViewHelper extends bAbstract {
 		}
 		return implode("\n\t", $return);
 	}
+
+	public function renderBreadcrumbs() {
+
+	}
 }
 
 class bView extends bAbstract {
@@ -430,7 +440,7 @@ class bControllerSimple extends bAbstract {
 		if(is_string($this->req))
 			$this->req_uri = $req;
 		elseif($this->req instanceof bRequest)
-			$this->req_uri = $this->req->getServer('REQUEST_URI');
+			$this->req_uri = $this->req->getReqUri();
 
 		$this->req_path = path_check($this->cfg->get('bloog_content') . $this->req_uri);
 
@@ -457,9 +467,7 @@ class bControllerSimple extends bAbstract {
 	public function getReqPath() {
 		return $this->req_path;
 	}
-}
 
-class bController extends bControllerSimple {
 	public function genPostList() {
 		// We need to scan the directory of content for the current url.
 		$content_list = rscandir($this->req_path);
@@ -487,7 +495,9 @@ class bController extends bControllerSimple {
 
 		return $list;
 	}
+}
 
+class bController extends bControllerSimple {
 	public function defaultAction() {
 		// Now we need to specify if this is a folder or file.
 		if(is_dir($this->req_path)) {
@@ -605,7 +615,7 @@ class bRouter extends bAbstract {
 	}
 
 	public function render() {
-		$req_uri = $this->req->getServer('REQUEST_URI');
+		$req_uri = $this->req->getReqUri();
 		if(array_key_exists($req_uri, $this->routes)) {
 			return call_user_func($this->routes[$req_uri], $this->cfg, $this->req);
 		} elseif(array_key_exists('*', $this->routes)) {
@@ -637,10 +647,6 @@ class bloog extends bAbstract {
 			}
 		});
 
-		foreach($this->cfg->get('add_paths') as $path => $callback) {
-			$router->path($path, $callback);
-		}
-
 		$router->path('/', function($cfg, $req) {
 			$controller = new bController($cfg, $req);
 			$controller->indexAction();
@@ -659,6 +665,11 @@ class bloog extends bAbstract {
 			$controller->defaultAction();
 			return $controller->render();
 		});
+
+		// Moving this to the bottom of the stack in case the config overwrites any of the defaults.
+		foreach($this->cfg->get('add_paths') as $path => $callback) {
+			$router->path($path, $callback);
+		}
 
 		if($this->cfg->get('cache_enable') == TRUE) {
 			$cache_title = $this->cfg->get('cache_prefix') . $req_uri;
