@@ -514,7 +514,7 @@ class bController extends bControllerSimple {
 		if($current_page === FALSE)
 			$current_page = 1;
 		else
-			(int) $current_page;
+			$current_page = (int) $current_page;
 
 		$listcount = count($list);
 		$list = array_slice($list, (($current_page - 1) * $postcount), ($postcount === 0 ? NULL : $postcount), true);
@@ -535,8 +535,7 @@ class bController extends bControllerSimple {
 		}
 		unset($list); //no longer need the list.
 
-		logme($listcount, count($page_list), (int) $current_page);
-		if($listcount > count($page_list)) {
+		if($listcount > count($page_list) && $listcount > (($current_page - 1) * $postcount)) {
 			$next_link = sprintf($this->cfg->get('anchor_format'),
 								 $this->req_uri . '?page=' . $current_page++,
 								 $this->cfg->get('pager_next_class'),
@@ -582,6 +581,7 @@ class bController extends bControllerSimple {
 	}
 
 	public function rssAction() {
+
 
 	}
 
