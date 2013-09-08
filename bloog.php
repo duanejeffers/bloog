@@ -178,6 +178,7 @@ class bContent extends bAbstract {
 	protected $_content_path = NULL;
 	protected $_title = NULL;
 	protected $_author = NULL;
+	protected $_content = NULL;
 	protected $_publishdate = NULL;
 	protected $_publishtimestamp = NULL;
 	protected $_published = NULL;
@@ -309,7 +310,8 @@ class bContent extends bAbstract {
 	}
 
 	public function __destruct() {
-		fclose($this->_fp);
+		if(is_resource($this->_fp))
+			fclose($this->_fp);
 	}
 }
 
