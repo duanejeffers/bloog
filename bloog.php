@@ -548,9 +548,14 @@ class bController extends bControllerSimple {
 		} else
 			$next_link = NULL;
 
-		if($current_page > 1) {
+		if($current_page > 1 && ($current_page - 1) > 1) {
 			$prev_link = sprintf($this->cfg->get('anchor_format'),
 								 $this->req_uri . '?page=' . ($current_page - 1),
+								 $this->cfg->get('pager_prev_class'),
+								 $this->cfg->get('pager_prev_text'));
+		} elseif($current_page > 1) {
+			$prev_link = sprintf($this->cfg->get('anchor_format'),
+								 $this->req_uri,
 								 $this->cfg->get('pager_prev_class'),
 								 $this->cfg->get('pager_prev_text'));
 		} else
