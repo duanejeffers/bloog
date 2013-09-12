@@ -16,7 +16,7 @@ define('CONT_EXT', '.md');
 define('DEV_LOG', TRUE);
 define('DEV_LOG_LOC', '/var/log/bloog.log');
 
-require_once('vendor/autoload.php');
+//require_once('vendor/autoload.php');
 
 use \Michelf\MarkdownExtra;
 
@@ -114,9 +114,11 @@ class bConfig {
 		return $this->mergeConfigArr($cfgArr);
 	}
 
-	public function get($key) {
+	public function get($key = NULL) {
 		if(isset($this->_configArr[$key])) {
 			return $this->_configArr[$key];
+		} elseif(is_null($key)) {
+			return $this->_configArr;
 		}
 		return FALSE;
 	}
@@ -539,7 +541,7 @@ class bController extends bControllerSimple {
 
 		if($listcount > count($page_list) && $listcount > (($current_page - 1) * $postcount)) {
 			$next_link = sprintf($this->cfg->get('anchor_format'),
-								 $this->req_uri . '?page=' . $current_page++,
+								 $this->req_uri . '?page=' . ($current_page + 1),
 								 $this->cfg->get('pager_next_class'),
 								 $this->cfg->get('pager_next_text'));
 		} else
@@ -547,7 +549,7 @@ class bController extends bControllerSimple {
 
 		if($current_page > 1) {
 			$prev_link = sprintf($this->cfg->get('anchor_format'),
-								 $this->req_uri . '?page=' . $current_page--,
+								 $this->req_uri . '?page=' . ($current_page - 1),
 								 $this->cfg->get('pager_prev_class'),
 								 $this->cfg->get('pager_prev_text'));
 		} else
@@ -682,7 +684,7 @@ class bloog extends bAbstract {
 	}
 }
 
-$layout = <<<BOL
+$layout = '
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -706,9 +708,9 @@ $layout = <<<BOL
   	<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
   </body>
 </html>
-BOL;
+';
 
-$post_display = <<<BOL
+$post_display = '
 <div class="row">
 	<div class="col-md-12">
 		<h1>%%title%%</h1>
@@ -722,9 +724,9 @@ $post_display = <<<BOL
 		<hr>
 	</div>
 </div>
-BOL;
+';
 
-$teaser_display = <<<BOL
+$teaser_display = '
 <div class="row">
 	<div class="col-md-12">
 		<h1><a href="%%url%%">%%title%%</a></h1>
@@ -738,9 +740,9 @@ $teaser_display = <<<BOL
 		<hr>
 	</div>
 </div>
-BOL;
+';
 
-$list_display = <<<BOL
+$list_display = '
 <div class="row">
 	<div class="col-md-12">
 	%%teaser_list%%
@@ -750,15 +752,15 @@ $list_display = <<<BOL
 	</ul>
 	</div>
 </div>
-BOL;
+';
 
-$error_display = <<<BOL
+$error_display = '
 <div class="jumbotron">
 	<h1>Whoops!</h1>
-	<p>It looks like the content you're looking for doesn't exist.</p>
+	<p>It looks like the content you\'re looking for doesn\'t exist.</p>
 	<p><a class="btn btn-primary btn-lg" onclick="window.history.back();">Go Back</a></p>
 </div>
-BOL;
+';
 
 $bloog = new bloog(new bConfig(array(
 	'anchor_format'		   => '<a href="%s" class="%s">%s</a>',
