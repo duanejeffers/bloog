@@ -16,7 +16,7 @@ define('CONT_EXT', '.md');
 define('DEV_LOG', TRUE);
 define('DEV_LOG_LOC', '/var/log/bloog.log');
 
-//require_once('vendor/autoload.php');
+require_once('vendor/autoload.php');
 
 use \Michelf\MarkdownExtra;
 
