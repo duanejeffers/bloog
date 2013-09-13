@@ -771,8 +771,8 @@ $error_display = '
 $bloog = new bloog(new bConfig(array(
 	'anchor_format'		   => '<a href="%s" class="%s">%s</a>',
 	'add_paths'			   => array(),
-	'bloog_path' 		   => realpath($_SERVER['DOCUMENT_ROOT']),
-	'bloog_content' 	   => realpath($_SERVER['DOCUMENT_ROOT'] . '/blogcontent'),
+	'bloog_path' 		   => dirname(__FILE__),
+	'bloog_content' 	   => dirname(__FILE__) . '/blogcontent',
 	'bloog_webpath'		   => $_SERVER['SERVER_NAME'],
 	'cache_enable' 		   => FALSE,
 	'cache_prefix' 		   => 'bloog',
