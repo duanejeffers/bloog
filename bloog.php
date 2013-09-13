@@ -30,6 +30,9 @@ function logme() {
 	file_put_contents(DEV_LOG_LOC, 'Line: ' . $arr['line'] . ' ' . $log . "\n\n", FILE_APPEND);
 }
 
+logme(dirname(__FILE__));
+die();
+
 function rscandir($dir, $inc_dir = FALSE) {
 	$scan = scandir($dir);
 	$result = array();
