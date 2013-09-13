@@ -30,9 +30,6 @@ function logme() {
 	file_put_contents(DEV_LOG_LOC, 'Line: ' . $arr['line'] . ' ' . $log . "\n\n", FILE_APPEND);
 }
 
-logme(dirname(__FILE__), dirname($_SERVER['PHP_SELF']), dirname($_SERVER['SCRIPT_FILENAME']));
-die();
-
 function rscandir($dir, $inc_dir = FALSE) {
 	$scan = scandir($dir);
 	$result = array();
@@ -774,8 +771,8 @@ $error_display = '
 $bloog = new bloog(new bConfig(array(
 	'anchor_format'		   => '<a href="%s" class="%s">%s</a>',
 	'add_paths'			   => array(),
-	'bloog_path' 		   => dirname(__FILE__),
-	'bloog_content' 	   => dirname(__FILE__) . '/blogcontent',
+	'bloog_path' 		   => dirname($_SERVER['SCRIPT_FILENAME']),
+	'bloog_content' 	   => dirname($_SERVER['SCRIPT_FILENAME']) . '/blogcontent',
 	'bloog_webpath'		   => $_SERVER['SERVER_NAME'],
 	'cache_enable' 		   => FALSE,
 	'cache_prefix' 		   => 'bloog',
