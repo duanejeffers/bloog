@@ -30,7 +30,7 @@ function logme() {
 	file_put_contents(DEV_LOG_LOC, 'Line: ' . $arr['line'] . ' ' . $log . "\n\n", FILE_APPEND);
 }
 
-logme(dirname(__FILE__));
+logme(dirname(__FILE__), dirname($_SERVER['PHP_SELF']), dirname($_SERVER['SCRIPT_FILENAME']));
 die();
 
 function rscandir($dir, $inc_dir = FALSE) {
