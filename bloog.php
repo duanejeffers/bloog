@@ -76,9 +76,11 @@ function bcache_invalid() {
 abstract class bAbstract {
 	protected $cfg;
 
-	public function __construct() {
+	public function __construct(bConfig &$cfg) {
 		$args = func_get_args();
-		$this->cfg = array_shift($args);
+		logme($args);
+		$this->cfg = $cfg;
+		array_shift($args); 
 
 		return call_user_func_array(array($this, 'init'), $args);
 	}
@@ -172,6 +174,13 @@ class bRequest {
 	public function getPostVar($key = NULL) {
 		return $this->get($this->_post, $key);
 	}
+
+}
+
+class bFile extends bAbstract {
+	private $_fp;
+	protected $_filepath;
+
 
 }
 
@@ -768,43 +777,51 @@ $error_display = <<<BOL
 </div>
 BOL;
 
+
+/*  The default settings are for a filesystem based blog. 
+	The included sql queries are there for the database switch. */
 $bloog = new bloog(new bConfig(array(
-	'anchor_format'		   => '<a href="%s" class="%s">%s</a>',
-	'add_paths'			   => array(),
-	'bloog_path' 		   => dirname($_SERVER['SCRIPT_FILENAME']),
-	'bloog_content' 	   => dirname($_SERVER['SCRIPT_FILENAME']) . '/blogcontent',
-	'bloog_webpath'		   => $_SERVER['SERVER_NAME'],
-	'cache_enable' 		   => FALSE,
-	'cache_prefix' 		   => 'bloog',
-	'cache_ttl' 		   => 3600,
-	'date_format'		   => 'l F j, Y \a\t h:i:s a',
-	'teaser_break'		   => '[teaser_break]',
-	'teaser_link_text'	   => 'Read More <span class="glyphicon glyphicon-chevron-right"></span>',
-	'teaser_link_class'	   => 'btn btn-primary',
-	'teaser_html'		   => '<hr>', // Teaser html to replace the [teaser_break]
-	'template_layout' 	   => $layout,
-	'template_teaser' 	   => $teaser_display,
-	'template_list'   	   => $list_display,
-	'template_post'   	   => $post_display,
-	'template_error'	   => $error_display,
-	'title_sitename'  	   => 'bloog v0.1',
-	'title_sitename_affix' => 'postfix', // options: prefix, postfix
-	'title_separator' 	   => ' :: ',
-	'title_error'		   => 'Whoops!',
-	'site_description'     => "Simple Blog using bloog",
-	'site_author' 		   => 'bloog',
-	'rss_enable'		   => FALSE,
-	'post_list_count'      => 5,
-	'post_list_order' 	   => 'newest', // options: newest, oldest
-	'post_breadcrumbs'     => TRUE,
-	'pager_next_text'	   => 'Older <span class="glyphicon glyphicon-chevron-right"></span>',
-	'pager_next_class'	   => '',
-	'pager_prev_text'	   => '<span class="glyphicon glyphicon-chevron-left"></span> Newer',
-	'pager_prev_class'	   => '',
-	'view_script'		   => array(array('src' => '//code.jquery.com/jquery.js'),
-									array('src' => '//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js')),
-	'view_link'			   => array('//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css'),
-	'view_style'		   => array(),
+	'anchor_format'		    => '<a href="%s" class="%s">%s</a>',
+	'add_paths'			    => array(),
+	'bloog_admin'			=> FALSE, // if false, 
+	'bloog_path' 		    => dirname($_SERVER['SCRIPT_FILENAME']),
+	'bloog_content' 	    => dirname($_SERVER['SCRIPT_FILENAME']) . '/blogcontent',
+	'bloog_content_storage' => 'file', // this can be database or file.
+	'bloog_webpath'		    => $_SERVER['SERVER_NAME'],
+	'cache_enable' 		    => FALSE,
+	'cache_prefix' 		    => 'bloog',
+	'cache_ttl' 		    => 3600,
+	'date_format'		    => 'l F j, Y \a\t h:i:s a',
+	'dsn'					=> NULL, // Specify the dsn for simple 
+	'teaser_break'		    => '[teaser_break]',
+	'teaser_link_text'	    => 'Read More <span class="glyphicon glyphicon-chevron-right"></span>',
+	'teaser_link_class'	    => 'btn btn-primary',
+	'teaser_html'		    => '<hr>', // Teaser html to replace the [teaser_break]
+	'template_layout' 	    => $layout,
+	'template_teaser' 	    => $teaser_display,
+	'template_list'   	    => $list_display,
+	'template_post'   	    => $post_display,
+	'template_error'	    => $error_display,
+	'title_sitename'  	    => 'bloog v0.1',
+	'title_sitename_affix'  => 'postfix', // options: prefix, postfix
+	'title_separator' 	    => ' :: ',
+	'title_error'		    => 'Whoops!',
+	'site_description'      => "Simple Blog using bloog",
+	'site_author' 		    => 'bloog',
+	'sql_install_priority'  => array(),
+
+	'rss_enable'		    => FALSE,
+	'post_list_count'       => 5,
+	'post_list_order' 	    => 'newest', // options: newest, oldest
+	'post_breadcrumbs'      => TRUE,
+	'pager_next_text'	    => 'Older <span class="glyphicon glyphicon-chevron-right"></span>',
+	'pager_next_class'	    => '',
+	'pager_prev_text'	    => '<span class="glyphicon glyphicon-chevron-left"></span> Newer',
+	'pager_prev_class'	    => '',
+	'view_script'		    => array(array('src' => '//code.jquery.com/jquery.js'),
+				                     array('src' => '//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js')),
+	'view_link'			    => array('//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css'),
+	'view_style'		    => array(),
 )));
 
 echo $bloog->render();
