@@ -80,7 +80,8 @@ abstract class bAbstract {
 		$args = func_get_args();
 		logme($args);
 		$this->cfg = $cfg;
-		array_shift($args); 
+		array_shift($args);
+		logme($args);
 
 		return call_user_func_array(array($this, 'init'), $args);
 	}
@@ -182,7 +183,7 @@ class bFile extends bAbstract {
 	protected $_filepath;
 
 	protected function init() {
-		
+
 	}
 
 }
