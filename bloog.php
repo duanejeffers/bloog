@@ -690,7 +690,7 @@ class bloog extends bAbstract {
 	}
 }
 
-$layout = '
+$layout = <<<BOL
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -714,9 +714,9 @@ $layout = '
   	<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
   </body>
 </html>
-';
+BOL;
 
-$post_display = '
+$post_display = <<<BOL
 <div class="row">
 	<div class="col-md-12">
 		<h1>%%title%%</h1>
@@ -730,9 +730,9 @@ $post_display = '
 		<hr>
 	</div>
 </div>
-';
+BOL;
 
-$teaser_display = '
+$teaser_display = <<<BOL
 <div class="row">
 	<div class="col-md-12">
 		<h1><a href="%%url%%">%%title%%</a></h1>
@@ -746,9 +746,9 @@ $teaser_display = '
 		<hr>
 	</div>
 </div>
-';
+BOL;
 
-$list_display = '
+$list_display = <<<BOL
 <div class="row">
 	<div class="col-md-12">
 	%%teaser_list%%
@@ -758,15 +758,15 @@ $list_display = '
 	</ul>
 	</div>
 </div>
-';
+BOL;
 
-$error_display = '
+$error_display = <<<BOL
 <div class="jumbotron">
 	<h1>Whoops!</h1>
 	<p>It looks like the content you\'re looking for doesn\'t exist.</p>
 	<p><a class="btn btn-primary btn-lg" onclick="window.history.back();">Go Back</a></p>
 </div>
-';
+BOL;
 
 $bloog = new bloog(new bConfig(array(
 	'anchor_format'		   => '<a href="%s" class="%s">%s</a>',
