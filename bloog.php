@@ -13,7 +13,7 @@
 define('PATH', '/');
 define('DEV_LOG', TRUE);
 define('DEV_LOG_LOC', '/var/log/bloog.log');
-define('FILE_DIR', dirname($_SERVER['DOCUMENT_ROOT']));
+define('FILE_DIR', dirname($_SERVER['SCRIPT_FILENAME']));
 
 require_once('vendor/autoload.php');
 
