@@ -181,6 +181,9 @@ class bFile extends bAbstract {
 	private $_fp;
 	protected $_filepath;
 
+	protected function init() {
+		
+	}
 
 }
 
