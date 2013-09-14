@@ -10,11 +10,10 @@
 	die('incorrect php version for this script. Must be 5.3 or higher.');
 } */
 
-define('BLOOG_CFG', '.bloogconfig.php');
 define('PATH', '/');
-define('CONT_EXT', '.md');
 define('DEV_LOG', TRUE);
 define('DEV_LOG_LOC', '/var/log/bloog.log');
+define('FILE_DIR', dirname($_SERVER['DOCUMENT_ROOT']));
 
 require_once('vendor/autoload.php');
 
@@ -73,15 +72,25 @@ function bcache_invalid() {
 	}
 }
 
+// bDef is the standardization of required options.
+class bDef {
+	const BLOOG_CFG 			 = '.bloogconfig.php';
+	const CONT_EXT 			     = '.md';
+	const CONTENT_STORE_FILE 	 = 'file';
+	const CONTENT_STORE_DATABASE = 'database';
+	const DATABASE_TYPE_SQLITE	 = 'sqlite';
+	const DATABASE_TYPE_MYSQL	 = 'mysql';
+	const DATABASE_NOW_SQLITE	 = 'strftime("%s", "now")';
+	const DATABASE_NOW_MYSQL	 = 'NOW()';
+}
+
 abstract class bAbstract {
 	protected $cfg;
 
 	public function __construct(bConfig &$cfg) {
 		$args = func_get_args();
-		logme($args);
 		$this->cfg = $cfg;
 		array_shift($args);
-		logme($args);
 
 		return call_user_func_array(array($this, 'init'), $args);
 	}
@@ -178,11 +187,29 @@ class bRequest {
 
 }
 
-class bFile extends bAbstract {
+abstract class bStorage extends bAbstract {
+	abstract function getSettings();
+}
+
+class bDatabase extends bStorage {
+	protected function init() {
+
+	}
+
+	function getSettings() {
+
+	}
+}
+
+class bFile extends bStorage {
 	private $_fp;
 	protected $_filepath;
 
 	protected function init() {
+		$this->_filepath = func_get_arg(0);
+	}
+
+	function getSettings() {
 
 	}
 
@@ -231,9 +258,9 @@ class bContent extends bAbstract {
 		$this->_content_path = func_get_arg(0);
 		// Check to see if content is available:
 		$this->_isfile = is_file($this->_content_path);
-		if(($addext = is_file($this->_content_path . CONT_EXT)) ||
+		if(($addext = is_file($this->_content_path . bDef::CONT_EXT)) ||
 			$this->isContent()) {
-			$fp = fopen($this->_content_path . ($addext ? CONT_EXT : ''), 'r');
+			$fp = fopen($this->_content_path . ($addext ? bDef::CONT_EXT : ''), 'r');
 			
 			while($line = fgets($fp)) {
 				if(strpos($line, '---') !== FALSE) { 
@@ -250,7 +277,7 @@ class bContent extends bAbstract {
 			$this->fmtPublishDate();
 
 			if(!$addext) {
-				$this->_content_path = str_replace(array(strtoupper(CONT_EXT), strtolower(CONT_EXT)), '', $this->_content_path);
+				$this->_content_path = str_replace(array(strtoupper(bDef::CONT_EXT), strtolower(bDef::CONT_EXT)), '', $this->_content_path);
 			} else {
 				$this->_isfile = $addext;
 			}
@@ -477,7 +504,11 @@ class bControllerSimple extends bAbstract {
 		return $this->req;
 	}
 
-	public function getReqUri() {
+	public function getReqUri($include_file = FALSE) {
+		$filename = basename(__FILE__);
+		if(((strpos($this->req_uri, $filename)) !== FALSE) && !$include_file) {
+			return substr($this->req_uri, strlen($filename));
+		}
 		return $this->req_uri;
 	}
 
@@ -552,7 +583,7 @@ class bController extends bControllerSimple {
 		}
 		unset($list); //no longer need the list.
 
-		logme($listcount, count($page_list), $current_page, $postcount);
+		//logme($listcount, count($page_list), $current_page, $postcount);
 		if($listcount > count($page_list) && $listcount > ($current_page * $postcount)) {
 			$next_link = sprintf($this->cfg->get('anchor_format'),
 								 $this->req_uri . '?page=' . ($current_page + 1),
@@ -653,7 +684,7 @@ class bRouter extends bAbstract {
 
 class bloog extends bAbstract {
 	protected function init() {
-		$rootcfg = $this->cfg->get('bloog_path') . PATH . BLOOG_CFG;
+		$rootcfg = $this->cfg->get('bloog_path') . PATH . bDef::BLOOG_CFG;
 		if(is_file($rootcfg)) {
 			$this->cfg->mergeConfigFile($rootcfg);
 		}
@@ -781,22 +812,109 @@ $error_display = <<<BOL
 </div>
 BOL;
 
+/* -- Install Queries -- */
+$install_queries = array(
+	bDef::DATABASE_TYPE_SQLITE => array(),
+	bDef::DATABASE_TYPE_MYSQL => array()
+);
+
+$install_queries[bDef::DATABASE_TYPE_SQLITE]['content_rev'] = <<<BOL
+CREATE TABLE "content_rev" (
+  "revid" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "title" text NOT NULL,
+  "content" text NOT NULL,
+  "created" integer NOT NULL
+);
+BOL;
+
+$install_queries[bDef::DATABASE_TYPE_SQLITE]['users'] = <<<BOL
+CREATE TABLE "users" (
+  "userid" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "username" text NOT NULL,
+  "password" text NOT NULL,
+  "email" text NOT NULL,
+  "description" text NOT NULL,
+  "created" integer NOT NULL,
+  "lastlogin" integer NOT NULL
+);
+BOL;
+
+$install_queries[bDef::DATABASE_TYPE_SQLITE]['urls'] = <<<BOL
+CREATE TABLE "urls" (
+	"urlid" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
+	"url" text NOT NULL,
+	"created" integer NOT NULL
+);
+BOL;
+
+$install_queries[bDef::DATABASE_TYPE_SQLITE]['urlusers'] = <<<BOL
+CREATE TABLE "urlusers" (
+  "urlid" integer NOT NULL,
+  "userid" integer NOT NULL,
+  "created"	 integer NOT NULL,
+  FOREIGN KEY ("urlid") REFERENCES "urls" ("urlid") ON DELETE CASCADE,
+  FOREIGN KEY ("userid") REFERENCES "users" ("userid") ON DELETE CASCADE
+);
+BOL;
+
+$install_queries[bDef::DATABASE_TYPE_SQLITE]['content'] = <<<BOL
+CREATE TABLE "content" (
+  "contentid" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "revid" integer NOT NULL,
+  "urlid" integer NOT NULL,
+  "userid" integer NOT NULL,
+  "uri" text NOT NULL,
+  "title" text NOT NULL,
+  "created" integer NOT NULL,
+  "publishdate" integer NULL,
+  "published" integer(1) NOT NULL DEFAULT '0',
+  "comments" integer(1) NOT NULL DEFAULT '0',
+  "breadcrumbs" integer(1) NOT NULL DEFAULT '0',
+  "listed" integer(1) NOT NULL DEFAULT '0',
+  FOREIGN KEY ("revid") REFERENCES "content_rev" ("revid") ON DELETE CASCADE,
+  FOREIGN KEY ("urlid") REFERENCES "urls" ("urlid") ON DELETE CASCADE,
+  FOREIGN KEY ("userid") REFERENCES "users" ("userid") ON DELETE CASCADE
+);
+BOL;
+
+$install_queries[bDef::DATABASE_TYPE_SQLITE]['view_content'] = <<<BOL
+CREATE VIEW "view_content" AS
+SELECT content.contentid AS contentid,
+	   urls.url AS url,
+	   content.uri AS uri,
+	   content.title AS title,
+	   users.username AS username,
+	   content.published AS published,
+	   content.publishdate AS publishdate,
+	   content.comments AS comments,
+	   content.breadcrumbs AS breadcrumbs,
+	   content.listed AS listed,
+	   content_rev.content AS content
+FROM content
+JOIN content_rev USING (revid)
+JOIN users USING (userid)
+JOIN urls USING (urlid);;
+BOL;
+
 
 /*  The default settings are for a filesystem based blog. 
 	The included sql queries are there for the database switch. */
 $bloog = new bloog(new bConfig(array(
 	'anchor_format'		    => '<a href="%s" class="%s">%s</a>',
 	'add_paths'			    => array(),
-	'bloog_admin'			=> FALSE, // if false, 
-	'bloog_path' 		    => dirname($_SERVER['SCRIPT_FILENAME']),
-	'bloog_content' 	    => dirname($_SERVER['SCRIPT_FILENAME']) . '/blogcontent',
-	'bloog_content_storage' => 'file', // this can be database or file.
+	'bloog_admin'			=> FALSE, // if false, admin will not display.
+	'bloog_install'			=> FALSE, // set this to true in the bloogconfig to install the sql code.
+	'bloog_path' 		    => FILE_DIR,
+	'bloog_content' 	    => FILE_DIR . '/blogcontent',
+	'bloog_content_storage' => bDef::CONTENT_STORE_FILE, // this can be database or file.
 	'bloog_webpath'		    => $_SERVER['SERVER_NAME'],
 	'cache_enable' 		    => FALSE,
 	'cache_prefix' 		    => 'bloog',
 	'cache_ttl' 		    => 3600,
 	'date_format'		    => 'l F j, Y \a\t h:i:s a',
-	'dsn'					=> NULL, // Specify the dsn for simple 
+	'database_type'			=> bDef::DATABASE_TYPE_SQLITE,
+	'database_now'			=> bDef::DATABASE_NOW_SQLITE,
+	'dsn'					=> 'sqlite:' . FILE_DIR . '/.bloog.db', // Specify the dsn for simple 
 	'teaser_break'		    => '[teaser_break]',
 	'teaser_link_text'	    => 'Read More <span class="glyphicon glyphicon-chevron-right"></span>',
 	'teaser_link_class'	    => 'btn btn-primary',
@@ -812,8 +930,8 @@ $bloog = new bloog(new bConfig(array(
 	'title_error'		    => 'Whoops!',
 	'site_description'      => "Simple Blog using bloog",
 	'site_author' 		    => 'bloog',
-	'sql_install_priority'  => array(),
-
+	'sql_install_priority'  => array('users', 'urls', 'urlusers', 'content_rev', 'content', 'view_content'),
+	'sql_install'			=> $install_queries,
 	'rss_enable'		    => FALSE,
 	'post_list_count'       => 5,
 	'post_list_order' 	    => 'newest', // options: newest, oldest
