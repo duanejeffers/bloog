@@ -689,7 +689,7 @@ class bloog extends bAbstract {
 			$this->cfg->mergeConfigFile($rootcfg);
 		}
 
-		logme($rootcfg);
+		logme($this->cfg);
 		die();
 	}
 
