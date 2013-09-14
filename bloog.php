@@ -688,6 +688,9 @@ class bloog extends bAbstract {
 		if(is_file($rootcfg)) {
 			$this->cfg->mergeConfigFile($rootcfg);
 		}
+
+		logme($rootcfg);
+		die();
 	}
 
 	public function render() {
