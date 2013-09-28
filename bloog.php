@@ -695,7 +695,7 @@ class bloog extends bAbstract {
 	}
 
 	public function render() {
-		$router = new bRouter($this->cfg, new bRequest());
+		$router = new bRouter($this->cfg, $req = new bRequest());
 
 		$router->path('/bloogcacheupdate', function($cfg, $req) {
 			// The update functionality is for recreating caches.
