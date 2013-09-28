@@ -167,10 +167,14 @@ class bRequest {
 		return FALSE;
 	}
 
-	public function getReqUri() {
+	// the $full variable will allow the function to return the full URI (including GET REQ_VARS)
+	// so that links or caching can be unique.
+	public function getReqUri($full = FALSE) {
 		$parse = parse_url($this->_server['REQUEST_URI']);
-
-		return $parse["path"];
+		if(!$full)
+			return $parse["path"];
+		else
+			return $this->_server['REQUEST_URI'];
 	}
 
 	public function getServer($key = NULL) {
@@ -700,6 +704,7 @@ class bloog extends bAbstract {
 				$controller->errorAction();
 				return $controller->render();
 			}
+
 		});
 
 		$router->path('/', function($cfg, $req) {
@@ -727,7 +732,7 @@ class bloog extends bAbstract {
 		}
 
 		if($this->cfg->get('cache_enable') == TRUE) {
-			$cache_title = $this->cfg->get('cache_prefix') . $req_uri;
+			$cache_title = $this->cfg->get('cache_prefix') . $req->getReqUri(TRUE);
 			return bcache($cache_title, array($router, 'render'), $this->cfg->get('cache_ttl'));
 		} else
 			return $router->render();
@@ -807,7 +812,7 @@ BOL;
 $error_display = <<<BOL
 <div class="jumbotron">
 	<h1>Whoops!</h1>
-	<p>It looks like the content you\'re looking for doesn\'t exist.</p>
+	<p>It looks like the content you're looking for doesn't exist.</p>
 	<p><a class="btn btn-primary btn-lg" onclick="window.history.back();">Go Back</a></p>
 </div>
 BOL;
